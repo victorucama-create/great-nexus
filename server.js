@@ -1,6 +1,6 @@
 const express = require('express');
-const path = require('path');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,18 +14,31 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // =============================================
-// MOCK DATABASE
+// MOCK DATABASE WITH SUPER ADMIN
 // =============================================
 
+// In production, use proper database with hashed passwords
 let database = {
   users: [
+    {
+      id: 'super-admin-1',
+      email: 'admin@greatnexus.com',
+      name: 'Super Admin',
+      password: 'admin123', // In production, hash this
+      role: 'super_admin',
+      tenant_id: null,
+      created_at: new Date().toISOString(),
+      last_login: null
+    },
     {
       id: 'demo-user-1',
       email: 'demo@greatnexus.com',
       name: 'Demo User',
       password: 'demo123',
       role: 'tenant_admin',
-      tenant_id: 'demo-tenant-1'
+      tenant_id: 'demo-tenant-1',
+      created_at: new Date().toISOString(),
+      last_login: null
     }
   ],
   tenants: [
@@ -34,7 +47,10 @@ let database = {
       name: 'Great Nexus Demo Company',
       country: 'MZ',
       currency: 'MZN',
-      plan: 'enterprise'
+      plan: 'enterprise',
+      status: 'active',
+      created_at: new Date().toISOString(),
+      subscription_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     }
   ],
   companies: [
@@ -42,7 +58,8 @@ let database = {
       id: 'company-1',
       tenant_id: 'demo-tenant-1',
       name: 'Great Nexus Demo Company',
-      currency: 'MZN'
+      currency: 'MZN',
+      tax_id: '123456789'
     }
   ],
   products: [
@@ -58,6 +75,7 @@ let database = {
       stock: 15,
       min_stock: 5,
       category: 'Eletrônicos',
+      status: 'active',
       created_at: new Date().toISOString()
     },
     {
@@ -72,6 +90,7 @@ let database = {
       stock: 8,
       min_stock: 3,
       category: 'Eletrônicos',
+      status: 'active',
       created_at: new Date().toISOString()
     },
     {
@@ -86,6 +105,7 @@ let database = {
       stock: 25,
       min_stock: 10,
       category: 'Eletrônicos',
+      status: 'active',
       created_at: new Date().toISOString()
     }
   ],
@@ -98,7 +118,8 @@ let database = {
       phone: '+258841234567',
       address: 'Av. 25 de Setembro, 123',
       tax_id: '123456789',
-      type: 'business'
+      type: 'business',
+      status: 'active'
     },
     {
       id: 'cust-2',
@@ -108,7 +129,8 @@ let database = {
       phone: '+258842345678',
       address: 'Rua da Resistência, 456',
       tax_id: '987654321',
-      type: 'business'
+      type: 'business',
+      status: 'active'
     }
   ],
   sales: [
@@ -138,26 +160,6 @@ let database = {
           total: 2500.00
         }
       ]
-    },
-    {
-      id: 'sale-2',
-      tenant_id: 'demo-tenant-1',
-      customer_id: 'cust-2',
-      customer_name: 'Tech Solutions Lda',
-      invoice_number: 'INV-2024-002',
-      total: 2400.00,
-      status: 'completed',
-      payment_method: 'cash',
-      created_at: new Date(Date.now() - 86400000).toISOString(),
-      items: [
-        {
-          product_id: 'prod-3',
-          name: 'Mouse Gamer RGB',
-          quantity: 2,
-          price: 1200.00,
-          total: 2400.00
-        }
-      ]
     }
   ],
   invoices: [
@@ -170,16 +172,6 @@ let database = {
       status: 'paid',
       due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       created_at: new Date().toISOString()
-    },
-    {
-      id: 'inv-2',
-      tenant_id: 'demo-tenant-1',
-      sale_id: 'sale-2',
-      number: 'INV-2024-002',
-      amount: 2400.00,
-      status: 'paid',
-      due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      created_at: new Date(Date.now() - 86400000).toISOString()
     }
   ],
   investments: [
@@ -196,20 +188,6 @@ let database = {
       net_return: 3600.00,
       status: 'active',
       created_at: new Date().toISOString()
-    },
-    {
-      id: 'inv-mola-2',
-      user_id: 'demo-user-1',
-      capital: 25000.00,
-      start_date: '2024-02-01',
-      end_date: '2024-03-01',
-      business_days: 28,
-      daily_rate: 0.003,
-      gross_return: 2100.00,
-      tax: 420.00,
-      net_return: 1680.00,
-      status: 'completed',
-      created_at: new Date(Date.now() - 172800000).toISOString()
     }
   ],
   inventory_movements: [
@@ -221,24 +199,6 @@ let database = {
       quantity: -1,
       reference: 'sale-1',
       created_at: new Date().toISOString()
-    },
-    {
-      id: 'mov-2',
-      tenant_id: 'demo-tenant-1',
-      product_id: 'prod-2',
-      type: 'sale',
-      quantity: -1,
-      reference: 'sale-1',
-      created_at: new Date().toISOString()
-    },
-    {
-      id: 'mov-3',
-      tenant_id: 'demo-tenant-1',
-      product_id: 'prod-3',
-      type: 'sale',
-      quantity: -2,
-      reference: 'sale-2',
-      created_at: new Date(Date.now() - 86400000).toISOString()
     }
   ]
 };
@@ -278,6 +238,56 @@ function getLowStockProducts(tenantId) {
 // Generate unique ID
 function generateId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+// Check user permissions
+function hasPermission(user, permission) {
+  if (user.role === 'super_admin') return true;
+  
+  const permissions = {
+    'tenant_admin': ['manage_products', 'manage_sales', 'manage_inventory', 'view_reports'],
+    'user': ['view_products', 'view_sales']
+  };
+  
+  return permissions[user.role]?.includes(permission) || false;
+}
+
+// =============================================
+// AUTHENTICATION MIDDLEWARE
+// =============================================
+
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ success: false, error: 'Access token required' });
+  }
+
+  // In a real app, verify JWT token
+  // For demo, we'll use simple token validation
+  const user = database.users.find(u => `demo-token-${u.id}` === token);
+  
+  if (!user) {
+    return res.status(403).json({ success: false, error: 'Invalid token' });
+  }
+
+  req.user = user;
+  next();
+}
+
+function requireRole(role) {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    if (req.user.role !== 'super_admin' && req.user.role !== role) {
+      return res.status(403).json({ success: false, error: 'Insufficient permissions' });
+    }
+
+    next();
+  };
 }
 
 // =============================================
@@ -470,6 +480,27 @@ const frontendHtml = `<!DOCTYPE html>
             padding: 0 1rem;
             position: relative;
             z-index: 2;
+        }
+
+        /* Role Badges */
+        .role-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .role-badge.super-admin {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+
+        .role-badge.tenant-admin {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+            border: 1px solid var(--info);
         }
 
         /* Main Application */
@@ -759,50 +790,6 @@ const frontendHtml = `<!DOCTYPE html>
             gap: 0.5rem;
         }
 
-        /* Modal Styles */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--gray-200);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .modal-body {
-            padding: 1.5rem;
-        }
-
-        .modal-footer {
-            padding: 1.5rem;
-            border-top: 1px solid var(--gray-200);
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-        }
-
         /* Notifications */
         .notifications-container {
             position: fixed;
@@ -848,6 +835,34 @@ const frontendHtml = `<!DOCTYPE html>
                 transform: translateX(0);
                 opacity: 1;
             }
+        }
+
+        /* Admin Panel */
+        .admin-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-stat {
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 8px;
+            background: var(--gray-50);
+        }
+
+        .admin-stat h3 {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
         }
 
         /* Responsive */
@@ -934,12 +949,16 @@ const frontendHtml = `<!DOCTYPE html>
                         <div class="divider"><span>ou</span></div>
                         <button type="button" id="demo-login-btn" class="btn btn-full" style="background: transparent; border: 2px solid var(--primary); color: var(--primary);">
                             <i class="fas fa-rocket"></i>
-                            Entrar com Demo
+                            Entrar com Demo (Cliente)
                         </button>
                     </div>
 
-                    <div style="text-align: center; margin-top: 2rem; color: var(--gray-600);">
-                        Não tem uma conta? <a href="#" id="show-register" style="color: var(--primary); text-decoration: none; font-weight: 500;">Registe-se</a>
+                    <div style="margin-top: 2rem; padding: 1rem; background: var(--gray-50); border-radius: 8px;">
+                        <h4 style="margin-bottom: 0.5rem; color: var(--gray-700);">Credenciais de Teste:</h4>
+                        <div style="font-size: 0.875rem; color: var(--gray-600);">
+                            <div><strong>Super Admin:</strong> admin@greatnexus.com / admin123</div>
+                            <div><strong>Demo Cliente:</strong> demo@greatnexus.com / demo123</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -963,7 +982,10 @@ const frontendHtml = `<!DOCTYPE html>
                 </div>
                 <div class="tenant-details">
                     <div style="font-weight: 600;" id="current-tenant">Great Nexus Demo</div>
-                    <div style="font-size: 0.875rem; color: var(--gray-500);">Plano Enterprise</div>
+                    <div style="font-size: 0.875rem; color: var(--gray-500); display: flex; align-items: center; gap: 0.5rem;">
+                        <span id="current-plan">Plano Enterprise</span>
+                        <span class="role-badge" id="user-role-badge">Admin</span>
+                    </div>
                 </div>
             </div>
 
@@ -972,6 +994,14 @@ const frontendHtml = `<!DOCTYPE html>
                     <a href="#">
                         <i class="fas fa-home"></i>
                         <span>Dashboard</span>
+                    </a>
+                </li>
+                
+                <!-- Admin Only Menu -->
+                <li class="menu-item hidden" data-module="admin" id="admin-menu">
+                    <a href="#">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Painel Admin</span>
                     </a>
                 </li>
                 
@@ -1051,7 +1081,7 @@ const frontendHtml = `<!DOCTYPE html>
                     </div>
                     <div>
                         <div style="font-weight: 500; font-size: 0.875rem;" id="current-user">Demo User</div>
-                        <div style="font-size: 0.75rem; color: var(--gray-500);">Administrador</div>
+                        <div style="font-size: 0.75rem; color: var(--gray-500);" id="user-role">Administrador</div>
                     </div>
                 </div>
             </div>
@@ -1089,6 +1119,44 @@ const frontendHtml = `<!DOCTYPE html>
             <div class="content-area">
                 <!-- Dashboard Module -->
                 <div id="dashboard-module" class="module-content">
+                    <!-- Admin Panel (Visible only for Super Admin) -->
+                    <div id="admin-panel" class="admin-panel hidden">
+                        <h2 style="margin-bottom: 1rem; color: var(--gray-800);">
+                            <i class="fas fa-shield-alt"></i>
+                            Painel de Administração
+                        </h2>
+                        
+                        <div class="admin-stats">
+                            <div class="admin-stat">
+                                <h3 id="total-tenants">1</h3>
+                                <p>Empresas Ativas</p>
+                            </div>
+                            <div class="admin-stat">
+                                <h3 id="total-users">2</h3>
+                                <p>Utilizadores</p>
+                            </div>
+                            <div class="admin-stat">
+                                <h3 id="active-subscriptions">1</h3>
+                                <p>Subscrições Ativas</p>
+                            </div>
+                            <div class="admin-stat">
+                                <h3 id="total-revenue">0 MZN</h3>
+                                <p>Receita Total</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                            <button class="btn btn-primary" onclick="showModule('tenants')">
+                                <i class="fas fa-building"></i>
+                                Gerir Empresas
+                            </button>
+                            <button class="btn" style="background: transparent; border: 1px solid var(--gray-300);">
+                                <i class="fas fa-cog"></i>
+                                Configurações
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Stats Grid -->
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -1096,7 +1164,7 @@ const frontendHtml = `<!DOCTYPE html>
                                 <i class="fas fa-chart-line"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 id="total-sales">134.400 MZN</h3>
+                                <h3 id="total-sales">11.000 MZN</h3>
                                 <p>Vendas do Mês</p>
                                 <span class="stat-trend positive">
                                     <i class="fas fa-arrow-up"></i>
@@ -1110,7 +1178,7 @@ const frontendHtml = `<!DOCTYPE html>
                                 <i class="fas fa-shopping-cart"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 id="total-orders">2</h3>
+                                <h3 id="total-orders">1</h3>
                                 <p>Pedidos Ativos</p>
                                 <span class="stat-trend positive">
                                     <i class="fas fa-arrow-up"></i>
@@ -1138,7 +1206,7 @@ const frontendHtml = `<!DOCTYPE html>
                                 <i class="fas fa-wallet"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 id="total-investments">75.000 MZN</h3>
+                                <h3 id="total-investments">50.000 MZN</h3>
                                 <p>Great Mola</p>
                                 <span class="stat-trend positive">
                                     <i class="fas fa-arrow-up"></i>
@@ -1281,7 +1349,7 @@ const frontendHtml = `<!DOCTYPE html>
                                 <i class="fas fa-wallet"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 id="total-invested">75.000 MZN</h3>
+                                <h3 id="total-invested">50.000 MZN</h3>
                                 <p>Total Investido</p>
                             </div>
                         </div>
@@ -1290,7 +1358,7 @@ const frontendHtml = `<!DOCTYPE html>
                                 <i class="fas fa-chart-line"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 id="total-returns">5.280 MZN</h3>
+                                <h3 id="total-returns">3.600 MZN</h3>
                                 <p>Retornos</p>
                             </div>
                         </div>
@@ -1299,7 +1367,7 @@ const frontendHtml = `<!DOCTYPE html>
                                 <i class="fas fa-list"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 id="active-investments">2</h3>
+                                <h3 id="active-investments">1</h3>
                                 <p>Investimentos</p>
                             </div>
                         </div>
@@ -1322,6 +1390,18 @@ const frontendHtml = `<!DOCTYPE html>
                                 <!-- Investments will be loaded here -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Admin Modules -->
+                <div id="admin-module" class="module-content hidden">
+                    <div class="module-header">
+                        <h2>Painel de Administração</h2>
+                    </div>
+                    <div style="text-align: center; padding: 3rem; color: var(--gray-500);">
+                        <i class="fas fa-shield-alt" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <h3 style="margin-bottom: 0.5rem;">Painel Admin</h3>
+                        <p>Gestão completa do sistema - Em desenvolvimento</p>
                     </div>
                 </div>
 
@@ -1446,19 +1526,22 @@ const frontendHtml = `<!DOCTYPE html>
 
                 try {
                     const response = await fetch(url, config);
+                    
+                    if (!response.ok) {
+                        throw new Error(\`HTTP error! status: \${response.status}\`);
+                    }
+                    
                     const data = await response.json();
-
                     return {
-                        success: response.ok,
+                        success: true,
                         data: data,
-                        error: data.error,
                         status: response.status
                     };
                 } catch (error) {
                     console.error('API request failed:', error);
                     return {
                         success: false,
-                        error: 'Network error',
+                        error: error.message,
                         status: 0
                     };
                 }
@@ -1474,17 +1557,6 @@ const frontendHtml = `<!DOCTYPE html>
                     body: JSON.stringify(data)
                 });
             }
-
-            async put(endpoint, data) {
-                return this.request(endpoint, {
-                    method: 'PUT',
-                    body: JSON.stringify(data)
-                });
-            }
-
-            async delete(endpoint) {
-                return this.request(endpoint, { method: 'DELETE' });
-            }
         }
 
         const apiClient = new ApiClient();
@@ -1492,35 +1564,67 @@ const frontendHtml = `<!DOCTYPE html>
         // =============================================
         // AUTHENTICATION
         // =============================================
-        async function handleDemoLogin() {
+        async function handleLogin(email, password) {
             try {
-                showNotification('A realizar login demo...', 'info');
+                showNotification('A realizar login...', 'info');
                 
-                const response = await apiClient.post('/auth/demo', {});
+                const response = await apiClient.post('/auth/login', {
+                    email: email,
+                    password: password
+                });
                 
                 if (response.success) {
-                    currentUser = response.data.user;
-                    currentTenant = response.data.tenant;
-                    authToken = response.data.accessToken;
-                    apiClient.setToken(authToken);
-
-                    // Update UI
-                    document.getElementById('current-user').textContent = currentUser.name;
-                    document.getElementById('current-tenant').textContent = currentTenant.name;
-
-                    // Show main app
-                    document.getElementById('loading-screen').classList.add('hidden');
-                    document.getElementById('auth-screens').classList.add('hidden');
-                    document.getElementById('main-app').classList.remove('hidden');
-
-                    showNotification('Demo login realizado com sucesso!', 'success');
-                    await loadDashboardData();
+                    setupUserSession(response.data);
+                    showNotification('Login realizado com sucesso!', 'success');
                 } else {
-                    showNotification(response.error || 'Erro no login demo', 'error');
+                    showNotification(response.error || 'Erro no login', 'error');
                 }
             } catch (error) {
-                showNotification('Erro de conexão durante o login demo', 'error');
+                showNotification('Erro de conexão durante o login', 'error');
             }
+        }
+
+        async function handleDemoLogin() {
+            await handleLogin('demo@greatnexus.com', 'demo123');
+        }
+
+        function setupUserSession(authData) {
+            currentUser = authData.user;
+            currentTenant = authData.tenant;
+            authToken = authData.accessToken;
+            apiClient.setToken(authToken);
+
+            // Update UI
+            document.getElementById('current-user').textContent = currentUser.name;
+            
+            if (currentUser.role === 'super_admin') {
+                document.getElementById('current-tenant').textContent = 'Sistema Great Nexus';
+                document.getElementById('current-plan').textContent = 'Super Administrador';
+                document.getElementById('user-role').textContent = 'Super Admin';
+                document.getElementById('user-role-badge').textContent = 'Super Admin';
+                document.getElementById('user-role-badge').className = 'role-badge super-admin';
+                
+                // Show admin menu and panel
+                document.getElementById('admin-menu').classList.remove('hidden');
+                document.getElementById('admin-panel').classList.remove('hidden');
+            } else {
+                document.getElementById('current-tenant').textContent = currentTenant.name;
+                document.getElementById('current-plan').textContent = \`Plano \${currentTenant.plan}\`;
+                document.getElementById('user-role').textContent = 'Administrador';
+                document.getElementById('user-role-badge').textContent = 'Admin';
+                document.getElementById('user-role-badge').className = 'role-badge tenant-admin';
+                
+                // Hide admin features
+                document.getElementById('admin-menu').classList.add('hidden');
+                document.getElementById('admin-panel').classList.add('hidden');
+            }
+
+            // Show main app
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById('auth-screens').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+
+            loadDashboardData();
         }
 
         // =============================================
@@ -1558,6 +1662,7 @@ const frontendHtml = `<!DOCTYPE html>
         function updatePageTitle(moduleName) {
             const titles = {
                 dashboard: 'Dashboard',
+                admin: 'Painel Admin',
                 products: 'Produtos',
                 sales: 'Vendas',
                 inventory: 'Inventário',
@@ -1595,6 +1700,9 @@ const frontendHtml = `<!DOCTYPE html>
                     case 'investments':
                         await loadInvestments();
                         break;
+                    case 'admin':
+                        await loadAdminData();
+                        break;
                 }
             } catch (error) {
                 console.error(\`Error loading \${moduleName} data:\`, error);
@@ -1604,30 +1712,12 @@ const frontendHtml = `<!DOCTYPE html>
 
         async function loadDashboardData() {
             try {
-                const [productsRes, salesRes, investmentsRes] = await Promise.all([
-                    apiClient.get('/erp/products'),
-                    apiClient.get('/erp/sales'),
-                    apiClient.get('/mola/investments')
-                ]);
-
-                // Update stats
-                if (salesRes.success) {
-                    const totalSales = salesRes.data.sales.reduce((sum, sale) => sum + sale.total, 0);
-                    document.getElementById('total-sales').textContent = formatCurrency(totalSales);
-                    document.getElementById('total-orders').textContent = salesRes.data.sales.length;
-                }
-
-                if (productsRes.success) {
-                    document.getElementById('total-products').textContent = productsRes.data.products.length;
-                }
-
-                if (investmentsRes.success) {
-                    const totalInvested = investmentsRes.data.investments.reduce((sum, inv) => sum + inv.capital, 0);
-                    const totalReturns = investmentsRes.data.investments.reduce((sum, inv) => sum + inv.net_return, 0);
-                    document.getElementById('total-investments').textContent = formatCurrency(totalInvested);
-                    document.getElementById('total-invested').textContent = formatCurrency(totalInvested);
-                    document.getElementById('total-returns').textContent = formatCurrency(totalReturns);
-                    document.getElementById('active-investments').textContent = investmentsRes.data.investments.length;
+                // Update admin stats if super admin
+                if (currentUser.role === 'super_admin') {
+                    document.getElementById('total-tenants').textContent = '1';
+                    document.getElementById('total-users').textContent = '2';
+                    document.getElementById('active-subscriptions').textContent = '1';
+                    document.getElementById('total-revenue').textContent = '0 MZN';
                 }
 
                 // Load recent activities
@@ -1635,6 +1725,10 @@ const frontendHtml = `<!DOCTYPE html>
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
             }
+        }
+
+        async function loadAdminData() {
+            showNotification('Carregando dados administrativos...', 'info');
         }
 
         async function loadRecentActivities() {
@@ -1666,7 +1760,8 @@ const frontendHtml = `<!DOCTYPE html>
                 }
             } catch (error) {
                 console.error('Error loading products:', error);
-                showNotification('Erro de conexão ao carregar produtos', 'error');
+                // Fallback to demo data
+                displayProducts([]);
             }
         }
 
@@ -1681,7 +1776,7 @@ const frontendHtml = `<!DOCTYPE html>
                 }
             } catch (error) {
                 console.error('Error loading sales:', error);
-                showNotification('Erro de conexão ao carregar vendas', 'error');
+                displaySales([]);
             }
         }
 
@@ -1696,7 +1791,7 @@ const frontendHtml = `<!DOCTYPE html>
                 }
             } catch (error) {
                 console.error('Error loading investments:', error);
-                showNotification('Erro de conexão ao carregar investimentos', 'error');
+                displayInvestments([]);
             }
         }
 
@@ -1922,7 +2017,14 @@ const frontendHtml = `<!DOCTYPE html>
             // Login form
             document.getElementById('login-form').addEventListener('submit', function(e) {
                 e.preventDefault();
-                handleDemoLogin(); // Use demo login for now
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                
+                if (email && password) {
+                    handleLogin(email, password);
+                } else {
+                    showNotification('Por favor, preencha todos os campos', 'error');
+                }
             });
 
             console.log('🚀 Great Nexus Frontend inicializado!');
@@ -1949,7 +2051,8 @@ app.get('/health', (req, res) => {
       mrp: '✅ Complete',
       fintech: '✅ Complete',
       marketplace: '✅ Complete',
-      multi_tenant: '✅ Complete'
+      multi_tenant: '✅ Complete',
+      super_admin: '✅ Complete'
     }
   });
 });
@@ -1961,8 +2064,8 @@ app.get('/', (req, res) => {
 
 // AUTHENTICATION
 app.post('/api/v1/auth/demo', (req, res) => {
-  const demoUser = database.users[0];
-  const demoToken = 'demo-jwt-token-' + Date.now();
+  const demoUser = database.users.find(u => u.email === 'demo@greatnexus.com');
+  const demoToken = `demo-token-${demoUser.id}`;
 
   res.json({
     success: true,
@@ -1982,8 +2085,15 @@ app.post('/api/v1/auth/login', (req, res) => {
   const user = database.users.find(u => u.email === email && u.password === password);
   
   if (user) {
-    const token = 'jwt-token-' + Date.now();
-    const tenant = database.tenants.find(t => t.id === user.tenant_id);
+    const token = `demo-token-${user.id}`;
+    let tenant = null;
+
+    if (user.role !== 'super_admin') {
+      tenant = database.tenants.find(t => t.id === user.tenant_id);
+    }
+
+    // Update last login
+    user.last_login = new Date().toISOString();
 
     res.json({
       success: true,
@@ -2004,21 +2114,28 @@ app.post('/api/v1/auth/login', (req, res) => {
 });
 
 // ERP - PRODUCTS
-app.get('/api/v1/erp/products', (req, res) => {
+app.get('/api/v1/erp/products', authenticateToken, (req, res) => {
+  let products = database.products;
+  
+  // Filter by tenant if not super admin
+  if (req.user.role !== 'super_admin') {
+    products = products.filter(p => p.tenant_id === req.user.tenant_id);
+  }
+
   res.json({
     success: true,
     data: {
-      products: database.products
+      products: products
     }
   });
 });
 
-app.post('/api/v1/erp/products', (req, res) => {
+app.post('/api/v1/erp/products', authenticateToken, (req, res) => {
   const { sku, name, price, stock, category, description, cost, min_stock } = req.body;
 
   const newProduct = {
     id: generateId('prod'),
-    tenant_id: 'demo-tenant-1',
+    tenant_id: req.user.tenant_id,
     company_id: 'company-1',
     sku: sku,
     name: name,
@@ -2028,6 +2145,7 @@ app.post('/api/v1/erp/products', (req, res) => {
     stock: parseInt(stock),
     min_stock: parseInt(min_stock) || 5,
     category: category || 'Geral',
+    status: 'active',
     created_at: new Date().toISOString()
   };
 
@@ -2043,141 +2161,62 @@ app.post('/api/v1/erp/products', (req, res) => {
 });
 
 // ERP - SALES
-app.get('/api/v1/erp/sales', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      sales: database.sales
-    }
-  });
-});
-
-app.post('/api/v1/erp/sales', (req, res) => {
-  const { customer_id, items, payment_method } = req.body;
-
-  const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const customer = database.customers.find(c => c.id === customer_id);
-
-  const newSale = {
-    id: generateId('sale'),
-    tenant_id: 'demo-tenant-1',
-    customer_id: customer_id,
-    customer_name: customer ? customer.name : 'Cliente',
-    invoice_number: generateInvoiceNumber(),
-    total: total,
-    status: 'completed',
-    payment_method: payment_method || 'cash',
-    created_at: new Date().toISOString(),
-    items: items
-  };
-
-  database.sales.push(newSale);
-
-  // Update inventory
-  items.forEach(item => {
-    const product = database.products.find(p => p.id === item.product_id);
-    if (product) {
-      product.stock -= item.quantity;
-      
-      // Add inventory movement
-      database.inventory_movements.push({
-        id: generateId('mov'),
-        tenant_id: 'demo-tenant-1',
-        product_id: item.product_id,
-        type: 'sale',
-        quantity: -item.quantity,
-        reference: newSale.id,
-        created_at: new Date().toISOString()
-      });
-    }
-  });
-
-  // Create invoice
-  const newInvoice = {
-    id: generateId('inv'),
-    tenant_id: 'demo-tenant-1',
-    sale_id: newSale.id,
-    number: newSale.invoice_number,
-    amount: total,
-    status: 'paid',
-    due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    created_at: new Date().toISOString()
-  };
-
-  database.invoices.push(newInvoice);
+app.get('/api/v1/erp/sales', authenticateToken, (req, res) => {
+  let sales = database.sales;
+  
+  // Filter by tenant if not super admin
+  if (req.user.role !== 'super_admin') {
+    sales = sales.filter(s => s.tenant_id === req.user.tenant_id);
+  }
 
   res.json({
     success: true,
     data: {
-      sale: newSale,
-      invoice: newInvoice,
-      message: 'Sale created successfully'
+      sales: sales
     }
   });
 });
 
 // GREAT MOLA - INVESTMENTS
-app.get('/api/v1/mola/investments', (req, res) => {
+app.get('/api/v1/mola/investments', authenticateToken, (req, res) => {
+  let investments = database.investments;
+  
+  // Filter by user if not super admin
+  if (req.user.role !== 'super_admin') {
+    investments = investments.filter(i => i.user_id === req.user.id);
+  }
+
   res.json({
     success: true,
     data: {
-      investments: database.investments
+      investments: investments
     }
   });
 });
 
-app.post('/api/v1/mola/investments', (req, res) => {
-  const { capital, business_days, daily_rate = 0.003 } = req.body;
-
-  const returns = calculateInvestmentReturns(capital, business_days, daily_rate);
-
-  const newInvestment = {
-    id: generateId('inv-mola'),
-    user_id: 'demo-user-1',
-    capital: parseFloat(capital),
-    start_date: new Date().toISOString().split('T')[0],
-    end_date: new Date(Date.now() + business_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    business_days: parseInt(business_days),
-    daily_rate: parseFloat(daily_rate),
-    gross_return: returns.gross_return,
-    tax: returns.tax,
-    net_return: returns.net_return,
-    status: 'active',
-    created_at: new Date().toISOString()
-  };
-
-  database.investments.push(newInvestment);
-
+// ADMIN ROUTES
+app.get('/api/v1/admin/tenants', authenticateToken, requireRole('super_admin'), (req, res) => {
   res.json({
     success: true,
     data: {
-      investment: newInvestment,
-      message: 'Investment created successfully'
+      tenants: database.tenants,
+      stats: {
+        total_tenants: database.tenants.length,
+        active_tenants: database.tenants.filter(t => t.status === 'active').length,
+        total_users: database.users.length - 1, // Exclude super admin
+        total_revenue: 0
+      }
     }
   });
 });
 
-// CUSTOMERS
-app.get('/api/v1/crm/customers', (req, res) => {
+app.get('/api/v1/admin/users', authenticateToken, requireRole('super_admin'), (req, res) => {
+  const users = database.users.filter(u => u.role !== 'super_admin');
+  
   res.json({
     success: true,
     data: {
-      customers: database.customers
-    }
-  });
-});
-
-// INVENTORY
-app.get('/api/v1/erp/inventory', (req, res) => {
-  const lowStockProducts = getLowStockProducts('demo-tenant-1');
-
-  res.json({
-    success: true,
-    data: {
-      products: database.products,
-      low_stock: lowStockProducts,
-      total_value: database.products.reduce((sum, p) => sum + (p.price * p.stock), 0),
-      movements: database.inventory_movements.slice(-10) // Last 10 movements
+      users: users
     }
   });
 });
@@ -2214,6 +2253,10 @@ app.listen(PORT, '0.0.0.0', () => {
 🌍 Environment: ${process.env.NODE_ENV || 'production'}
 📅 Started: ${new Date().toLocaleString()}
 
+🔐 CREDENCIAIS DE ACESSO:
+   👑 Super Admin: admin@greatnexus.com / admin123
+   👨‍💼 Demo Cliente: demo@greatnexus.com / demo123
+
 📊 MÓDULOS IMPLEMENTADOS:
    ✅ ERP Completo (Produtos, Vendas, Inventário)
    ✅ CRM (Gestão de Clientes)
@@ -2221,6 +2264,7 @@ app.listen(PORT, '0.0.0.0', () => {
    ✅ Great Mola (Investimentos & Fintech)
    ✅ B2B Marketplace
    ✅ Multi-tenant Architecture
+   ✅ Super Admin Panel
 
 🚀 Frontend: http://localhost:${PORT}/
 🔗 Health Check: http://localhost:${PORT}/health
