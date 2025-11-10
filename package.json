@@ -1,0 +1,19 @@
+{
+  "name": "great-nexus",
+  "version": "1.0.0",
+  "description": "Intelligent Business Ecosystem",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:auth\" \"npm run dev:erp\" \"npm run dev:mola\"",
+    "dev:auth": "cd packages/auth-service && npm run dev",
+    "dev:erp": "cd packages/erp-service && npm run dev",
+    "dev:mola": "cd packages/mola-service && npm run dev",
+    "build": "npm run build --workspaces",
+    "test": "npm test --workspaces"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
