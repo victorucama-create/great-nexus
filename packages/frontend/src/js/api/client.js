@@ -1,12 +1,16 @@
 // API Client for Great Nexus
 class ApiClient {
     constructor() {
-        this.baseURL = 'http://localhost:3001/api/v1';
+        this.baseURL = window.location.origin + '/api/v1';
         this.token = localStorage.getItem('auth_token');
     }
 
+    setToken(token) {
+        this.token = token;
+    }
+
     async request(endpoint, options = {}) {
-        const url = `${this.baseURL}${endpoint}`;
+        const url = this.baseURL + endpoint;
         const config = {
             headers: {
                 'Content-Type': 'application/json',
@@ -22,26 +26,26 @@ class ApiClient {
 
         try {
             const response = await fetch(url, config);
-            
-            // Handle token expiration
-            if (response.status === 401) {
-                const newToken = await window.authManager.refreshToken();
-                if (newToken) {
-                    this.token = newToken;
-                    config.headers.Authorization = `Bearer ${newToken}`;
-                    return await fetch(url, config);
-                }
-            }
+            const data = await response.json();
 
-            return response;
+            return {
+                success: response.ok,
+                data: data,
+                error: data.error,
+                status: response.status
+            };
         } catch (error) {
             console.error('API request failed:', error);
-            throw error;
+            return {
+                success: false,
+                error: 'Network error: ' + error.message,
+                status: 0
+            };
         }
     }
 
     async get(endpoint) {
-        return this.request(endpoint);
+        return this.request(endpoint, { method: 'GET' });
     }
 
     async post(endpoint, data) {
@@ -59,9 +63,7 @@ class ApiClient {
     }
 
     async delete(endpoint) {
-        return this.request(endpoint, {
-            method: 'DELETE'
-        });
+        return this.request(endpoint, { method: 'DELETE' });
     }
 
     // ERP Methods
@@ -74,14 +76,6 @@ class ApiClient {
         return this.post('/erp/products', productData);
     }
 
-    async updateProduct(id, productData) {
-        return this.put(`/erp/products/${id}`, productData);
-    }
-
-    async deleteProduct(id) {
-        return this.delete(`/erp/products/${id}`);
-    }
-
     // Great Mola Methods
     async getInvestments() {
         return this.get('/mola/investments');
@@ -90,16 +84,7 @@ class ApiClient {
     async createInvestment(investmentData) {
         return this.post('/mola/investments', investmentData);
     }
-
-    // B2B Marketplace Methods
-    async getMarketplaceProducts() {
-        return this.get('/b2b/products');
-    }
-
-    async createOrder(orderData) {
-        return this.post('/b2b/orders', orderData);
-    }
 }
 
 // Initialize API client
-window.apiClient = new ApiClient();
+window.ApiClient = ApiClient;
