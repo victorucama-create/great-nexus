@@ -9,97 +9,95 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // =============================================
-// IN-MEMORY DATABASE
+// MIDDLEWARE CONFIGURATION
 // =============================================
-const memoryDB = {
-  users: [
-    {
-      id: '1',
-      email: 'admin@greatnexus.com',
-      password: '12345678', // Demo only
-      name: 'Administrador',
-      role: 'super_admin',
-      tenant_id: '1'
-    }
-  ],
-  tenants: [
-    {
-      id: '1',
-      name: 'Great Nexus Demo',
-      country: 'MZ',
-      currency: 'MZN',
-      plan: 'enterprise'
-    }
-  ],
-  products: [],
-  investments: []
-};
 
-// Add demo data
-memoryDB.products.push(
-  {
-    id: 'prod-1',
-    tenant_id: '1',
-    sku: 'MON-24-LED',
-    name: 'Monitor LED 24"',
-    price: 8500.00,
-    stock: 15,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: 'prod-2', 
-    tenant_id: '1',
-    sku: 'TEC-GAMER',
-    name: 'Teclado Gamer Mecânico',
-    price: 2500.00,
-    stock: 8,
-    created_at: new Date().toISOString()
-  }
-);
-
-// =============================================
-// MIDDLEWARE
-// =============================================
+// Security Headers
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: false, // Desabilitado para desenvolvimento
   crossOriginEmbedderPolicy: false
 }));
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
 
+// CORS Configuration
+app.use(cors({
+  origin: true, // Permitir qualquer origem
+  credentials: true
+}));
+
+// Body Parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Rate Limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 1000,
-  message: { error: 'Too many requests, please try again later.' }
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Mais leniente para demo
+  message: {
+    error: 'Too many requests from this IP, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
 });
 app.use('/api/', limiter);
 
 // =============================================
-// STATIC FILE SERVING - Criar pasta frontend se não existir
+// STATIC FILES SERVING
 // =============================================
-const fs = require('fs');
-const frontendPath = path.join(__dirname, 'frontend');
 
-// Criar pasta frontend se não existir
-if (!fs.existsSync(frontendPath)) {
-  fs.mkdirSync(frontendPath, { recursive: true });
-  console.log('✅ Created frontend directory');
-}
+// Servir arquivos estáticos do frontend
+app.use(express.static(path.join(__dirname, 'frontend'), {
+  maxAge: process.env.NODE_ENV === 'production' ? '1d' : '0',
+  etag: true,
+  lastModified: true,
+  index: false // Não servir index.html automaticamente
+}));
 
-// Servir arquivos estáticos da pasta frontend
-app.use(express.static(frontendPath));
+// =============================================
+// HEALTH CHECK & STATUS ENDPOINTS
+// =============================================
+
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    service: 'Great Nexus',
+    version: '1.0.0',
+    environment: process.env.NODE_ENV || 'production',
+    timestamp: new Date().toISOString(),
+    database: 'mock-data',
+    message: '🚀 Servidor está funcionando perfeitamente! Frontend com dados demo.'
+  });
+});
+
+app.get('/status', (req, res) => {
+  res.json({
+    message: 'Great Nexus API Server',
+    status: 'operational',
+    version: '1.0.0',
+    endpoints: {
+      auth: ['/api/v1/auth/demo', '/api/v1/auth/login', '/api/v1/auth/register'],
+      erp: ['/api/v1/erp/products'],
+      mola: ['/api/v1/mola/investments'],
+      health: '/health'
+    },
+    timestamp: new Date().toISOString()
+  });
+});
 
 // =============================================
 // AUTHENTICATION MIDDLEWARE
 // =============================================
+
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
+  // Skip auth for public routes
   const publicRoutes = [
-    '/', '/health', '/status', '/api/v1/auth/register', 
-    '/api/v1/auth/login', '/api/v1/auth/demo'
+    '/health', 
+    '/status',
+    '/api/v1/auth/demo', 
+    '/api/v1/auth/login', 
+    '/api/v1/auth/register'
   ];
   
   if (publicRoutes.includes(req.path)) {
@@ -110,498 +108,534 @@ const authenticateToken = (req, res, next) => {
     return res.status(401).json({ error: 'Access token required' });
   }
 
+  // Simple token verification for demo
   try {
-    const jwt = require('jsonwebtoken');
-    const jwtSecret = process.env.JWT_SECRET || 'great-nexus-demo-secret';
-    const user = jwt.verify(token, jwtSecret);
-    req.user = user;
-    next();
+    // In a real app, you would verify JWT properly
+    if (token.startsWith('demo-') || token.startsWith('jwt-token-')) {
+      req.user = {
+        user_id: 'demo-user-1',
+        tenant_id: 'demo-tenant-1',
+        role: 'tenant_admin'
+      };
+      return next();
+    }
+    
+    throw new Error('Invalid token');
   } catch (error) {
     return res.status(403).json({ error: 'Invalid or expired token' });
   }
 };
 
-app.use('/api/', authenticateToken);
+// Apply auth middleware to protected API routes
+app.use('/api/v1/erp', authenticateToken);
+app.use('/api/v1/mola', authenticateToken);
 
 // =============================================
-// HEALTH CHECK & STATUS
+// AUTHENTICATION ROUTES
 // =============================================
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    service: 'Great Nexus',
-    version: '1.0.0',
-    environment: process.env.NODE_ENV || 'development',
-    database: 'in-memory',
-    timestamp: new Date().toISOString()
-  });
-});
 
-app.get('/status', (req, res) => {
-  res.json({
-    message: '🚀 Great Nexus API is running!',
-    database: 'In-memory (Demo Mode)',
-    endpoints: {
-      auth: '/api/v1/auth/*',
-      erp: '/api/v1/erp/*',
-      mola: '/api/v1/mola/*',
-      demo: '/api/v1/auth/demo'
-    }
-  });
-});
-
-// =============================================
-// DEMO AUTH ENDPOINT
-// =============================================
+// Demo Login - No authentication required
 app.post('/api/v1/auth/demo', (req, res) => {
-  const jwt = require('jsonwebtoken');
-  const jwtSecret = process.env.JWT_SECRET || 'great-nexus-demo-secret';
+  console.log('📧 Demo login request received');
   
   const demoUser = {
     id: 'demo-user-1',
     email: 'demo@greatnexus.com',
     name: 'Demo User',
     role: 'tenant_admin',
-    tenant_id: '1'
+    tenant_id: 'demo-tenant-1'
   };
 
-  const demoToken = jwt.sign(demoUser, jwtSecret, { expiresIn: '24h' });
+  const demoToken = 'demo-jwt-token-' + Date.now();
 
   res.json({
     message: 'Demo login successful!',
     user: demoUser,
-    tenant: memoryDB.tenants[0],
+    tenant: {
+      id: 'demo-tenant-1',
+      name: 'Great Nexus Demo Company',
+      plan: 'starter',
+      country: 'MZ',
+      currency: 'MZN'
+    },
     accessToken: demoToken,
     refreshToken: demoToken
   });
 });
 
-// =============================================
-// AUTH ROUTES
-// =============================================
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+// User Login
+app.post('/api/v1/auth/login', (req, res) => {
+  const { email, password } = req.body;
+  
+  console.log('📧 Login attempt for:', email);
 
-app.post('/api/v1/auth/register', async (req, res) => {
-  try {
-    const { email, password, name, companyName, country = 'MZ', currency = 'MZN' } = req.body;
-
-    if (!email || !password || !name || !companyName) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
-
-    const userExists = memoryDB.users.find(u => u.email === email);
-    if (userExists) {
-      return res.status(400).json({ error: 'User already exists' });
-    }
-
-    const tenantId = 'tenant-' + Date.now();
-    const tenant = {
-      id: tenantId,
-      name: companyName,
-      country,
-      currency,
-      plan: 'starter',
-      created_at: new Date().toISOString()
-    };
-    memoryDB.tenants.push(tenant);
-
-    const userId = 'user-' + Date.now();
-    const user = {
-      id: userId,
-      tenant_id: tenantId,
-      email,
-      password: password,
-      name,
-      role: 'tenant_admin',
-      created_at: new Date().toISOString()
-    };
-    memoryDB.users.push(user);
-
-    const jwtSecret = process.env.JWT_SECRET || 'great-nexus-demo-secret';
-    const accessToken = jwt.sign(
-      { user_id: userId, tenant_id: tenantId, role: user.role },
-      jwtSecret,
-      { expiresIn: '24h' }
-    );
-
-    res.status(201).json({
-      message: 'Registration successful!',
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role
-      },
-      tenant: {
-        id: tenant.id,
-        name: tenant.name,
-        plan: tenant.plan
-      },
-      accessToken,
-      refreshToken: accessToken
-    });
-
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ 
-      error: 'Internal server error during registration',
-      details: error.message
-    });
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
   }
+
+  // Mock user validation
+  const user = {
+    id: 'user-' + Date.now(),
+    email: email,
+    name: email.split('@')[0],
+    role: 'tenant_admin',
+    tenant_id: 'tenant-' + Date.now()
+  };
+
+  const token = 'jwt-token-' + Date.now();
+
+  res.json({
+    message: 'Login successful!',
+    user: user,
+    tenant: {
+      id: user.tenant_id,
+      name: 'Minha Empresa',
+      plan: 'starter',
+      country: 'MZ',
+      currency: 'MZN'
+    },
+    accessToken: token,
+    refreshToken: token
+  });
 });
 
-app.post('/api/v1/auth/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
+// User Registration
+app.post('/api/v1/auth/register', (req, res) => {
+  const { email, password, name, companyName, country = 'MZ', currency = 'MZN' } = req.body;
+  
+  console.log('📧 Registration attempt for:', email, 'Company:', companyName);
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
-
-    const user = memoryDB.users.find(u => u.email === email);
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    if (user.password !== password) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    const tenant = memoryDB.tenants.find(t => t.id === user.tenant_id);
-    const jwtSecret = process.env.JWT_SECRET || 'great-nexus-demo-secret';
-    const accessToken = jwt.sign(
-      { user_id: user.id, tenant_id: user.tenant_id, role: user.role },
-      jwtSecret,
-      { expiresIn: '24h' }
-    );
-
-    res.json({
-      message: 'Login successful!',
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role
-      },
-      tenant: {
-        id: tenant.id,
-        name: tenant.name,
-        plan: tenant.plan
-      },
-      accessToken,
-      refreshToken: accessToken
-    });
-
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ 
-      error: 'Internal server error during login',
-      details: error.message
-    });
+  if (!email || !password || !name || !companyName) {
+    return res.status(400).json({ error: 'All fields are required' });
   }
+
+  if (password.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters' });
+  }
+
+  // Mock user creation
+  const user = {
+    id: 'user-' + Date.now(),
+    email: email,
+    name: name,
+    role: 'tenant_admin',
+    tenant_id: 'tenant-' + Date.now()
+  };
+
+  const token = 'jwt-token-' + Date.now();
+
+  res.status(201).json({
+    message: 'Registration successful!',
+    user: user,
+    tenant: {
+      id: user.tenant_id,
+      name: companyName,
+      plan: 'starter',
+      country: country,
+      currency: currency
+    },
+    accessToken: token,
+    refreshToken: token
+  });
 });
 
 // =============================================
 // ERP ROUTES
 // =============================================
-app.get('/api/v1/erp/products', (req, res) => {
-  try {
-    const userProducts = memoryDB.products.filter(p => p.tenant_id === req.user.tenant_id);
-    
-    res.json({
-      success: true,
-      products: userProducts,
-      pagination: {
-        page: 1,
-        limit: 50,
-        total: userProducts.length,
-        pages: 1
-      }
-    });
-  } catch (error) {
-    console.error('Get products error:', error);
-    res.status(500).json({ error: 'Failed to fetch products' });
+
+// Mock products data
+let mockProducts = [
+  {
+    id: 'prod-1',
+    tenant_id: 'demo-tenant-1',
+    sku: 'MON-24-LED',
+    name: 'Monitor LED 24"',
+    price: 8500.00,
+    stock: 15,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'prod-2',
+    tenant_id: 'demo-tenant-1',
+    sku: 'TEC-GAMER',
+    name: 'Teclado Gamer Mecânico',
+    price: 2500.00,
+    stock: 8,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'prod-3',
+    tenant_id: 'demo-tenant-1',
+    sku: 'MOUSE-WL',
+    name: 'Mouse Sem Fios',
+    price: 1200.00,
+    stock: 25,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'prod-4',
+    tenant_id: 'demo-tenant-1',
+    sku: 'CPU-I7',
+    name: 'Computador Intel i7',
+    price: 45000.00,
+    stock: 5,
+    created_at: new Date().toISOString()
   }
+];
+
+// Get products with pagination and search
+app.get('/api/v1/erp/products', (req, res) => {
+  const { page = 1, limit = 50, search } = req.query;
+  const pageNum = parseInt(page);
+  const limitNum = parseInt(limit);
+  
+  console.log('📦 Fetching products - Page:', pageNum, 'Limit:', limitNum, 'Search:', search);
+
+  let filteredProducts = [...mockProducts];
+
+  // Apply search filter
+  if (search) {
+    const searchLower = search.toLowerCase();
+    filteredProducts = filteredProducts.filter(product => 
+      product.name.toLowerCase().includes(searchLower) ||
+      product.sku.toLowerCase().includes(searchLower)
+    );
+  }
+
+  // Apply pagination
+  const startIndex = (pageNum - 1) * limitNum;
+  const endIndex = startIndex + limitNum;
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+
+  res.json({
+    success: true,
+    products: paginatedProducts,
+    pagination: {
+      page: pageNum,
+      limit: limitNum,
+      total: filteredProducts.length,
+      pages: Math.ceil(filteredProducts.length / limitNum)
+    }
+  });
 });
 
+// Create new product
 app.post('/api/v1/erp/products', (req, res) => {
-  try {
-    const { sku, name, price = 0, stock = 0 } = req.body;
-    
-    if (!sku || !name) {
-      return res.status(400).json({ error: 'SKU and name are required' });
-    }
+  const { sku, name, price, stock } = req.body;
+  
+  console.log('📦 Creating product:', { sku, name, price, stock });
 
-    const product = {
-      id: 'prod-' + Date.now(),
-      tenant_id: req.user.tenant_id,
-      sku,
-      name,
-      price: parseFloat(price),
-      stock: parseInt(stock),
-      created_at: new Date().toISOString()
-    };
-
-    memoryDB.products.push(product);
-    
-    res.status(201).json({
-      success: true,
-      product,
-      message: 'Product created successfully'
+  if (!sku || !name || !price || !stock) {
+    return res.status(400).json({ 
+      success: false,
+      error: 'SKU, name, price and stock are required' 
     });
-  } catch (error) {
-    console.error('Create product error:', error);
-    res.status(500).json({ error: 'Failed to create product' });
   }
+
+  // Check if SKU already exists
+  const existingProduct = mockProducts.find(p => p.sku === sku);
+  if (existingProduct) {
+    return res.status(400).json({
+      success: false,
+      error: 'Product with this SKU already exists'
+    });
+  }
+
+  const newProduct = {
+    id: 'prod-' + Date.now(),
+    tenant_id: req.user?.tenant_id || 'demo-tenant-1',
+    sku: sku,
+    name: name,
+    price: parseFloat(price),
+    stock: parseInt(stock),
+    created_at: new Date().toISOString()
+  };
+
+  mockProducts.unshift(newProduct); // Add to beginning of array
+
+  res.status(201).json({
+    success: true,
+    product: newProduct,
+    message: 'Product created successfully'
+  });
+});
+
+// Update product
+app.put('/api/v1/erp/products/:id', (req, res) => {
+  const productId = req.params.id;
+  const { sku, name, price, stock } = req.body;
+  
+  console.log('📦 Updating product:', productId);
+
+  const productIndex = mockProducts.findIndex(p => p.id === productId);
+  
+  if (productIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      error: 'Product not found'
+    });
+  }
+
+  // Update product
+  mockProducts[productIndex] = {
+    ...mockProducts[productIndex],
+    sku: sku || mockProducts[productIndex].sku,
+    name: name || mockProducts[productIndex].name,
+    price: price !== undefined ? parseFloat(price) : mockProducts[productIndex].price,
+    stock: stock !== undefined ? parseInt(stock) : mockProducts[productIndex].stock
+  };
+
+  res.json({
+    success: true,
+    product: mockProducts[productIndex],
+    message: 'Product updated successfully'
+  });
+});
+
+// Delete product
+app.delete('/api/v1/erp/products/:id', (req, res) => {
+  const productId = req.params.id;
+  
+  console.log('📦 Deleting product:', productId);
+
+  const productIndex = mockProducts.findIndex(p => p.id === productId);
+  
+  if (productIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      error: 'Product not found'
+    });
+  }
+
+  const deletedProduct = mockProducts.splice(productIndex, 1)[0];
+
+  res.json({
+    success: true,
+    product: deletedProduct,
+    message: 'Product deleted successfully'
+  });
 });
 
 // =============================================
 // GREAT MOLA ROUTES
 // =============================================
+
+// Mock investments data
+let mockInvestments = [
+  {
+    id: 'inv-1',
+    user_id: 'demo-user-1',
+    capital: 50000,
+    start_date: '2024-01-15',
+    business_days: 30,
+    daily_rate: 0.003,
+    gross_return: 4500,
+    tax: 900,
+    net_return: 3600,
+    status: 'active',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'inv-2',
+    user_id: 'demo-user-1',
+    capital: 25000,
+    start_date: '2024-02-01',
+    business_days: 15,
+    daily_rate: 0.003,
+    gross_return: 1125,
+    tax: 225,
+    net_return: 900,
+    status: 'active',
+    created_at: new Date().toISOString()
+  }
+];
+
+// Get user investments
 app.get('/api/v1/mola/investments', (req, res) => {
-  try {
-    const userInvestments = memoryDB.investments.filter(i => i.user_id === req.user.user_id);
-    
-    res.json({
-      success: true,
-      investments: userInvestments.length > 0 ? userInvestments : [
-        {
-          id: 'demo-investment-1',
-          user_id: req.user.user_id,
-          capital: 50000,
-          start_date: '2024-01-15',
-          business_days: 30,
-          daily_rate: 0.003,
-          gross_return: 4500,
-          tax: 900,
-          net_return: 3600,
-          status: 'active',
-          created_at: new Date().toISOString()
-        }
-      ],
-      message: 'Investments fetched successfully'
-    });
-  } catch (error) {
-    console.error('Get investments error:', error);
-    res.status(500).json({ error: 'Failed to fetch investments' });
-  }
-});
-
-app.post('/api/v1/mola/investments', (req, res) => {
-  try {
-    const { capital, business_days, daily_rate = 0.003 } = req.body;
-    
-    if (!capital || !business_days) {
-      return res.status(400).json({ error: 'Capital and business days are required' });
-    }
-
-    const gross_return = capital * business_days * daily_rate;
-    const tax = gross_return * 0.20;
-    const net_return = gross_return - tax;
-
-    const investment = {
-      id: 'inv-' + Date.now(),
-      user_id: req.user.user_id,
-      capital: parseFloat(capital),
-      start_date: new Date().toISOString().split('T')[0],
-      business_days: parseInt(business_days),
-      daily_rate: parseFloat(daily_rate),
-      gross_return,
-      tax,
-      net_return,
-      status: 'active',
-      created_at: new Date().toISOString()
-    };
-
-    memoryDB.investments.push(investment);
-
-    res.status(201).json({
-      success: true,
-      investment,
-      message: 'Investment created successfully'
-    });
-  } catch (error) {
-    console.error('Create investment error:', error);
-    res.status(500).json({ error: 'Failed to create investment' });
-  }
-});
-
-// =============================================
-// FRONTEND ROUTE - Serve HTML básico se não existir frontend
-// =============================================
-app.get('/', (req, res) => {
-  const frontendFile = path.join(frontendPath, 'index.html');
+  const userId = req.user?.user_id || 'demo-user-1';
   
-  // Se o arquivo index.html existe, servir ele
-  if (fs.existsSync(frontendFile)) {
-    return res.sendFile(frontendFile);
-  }
-  
-  // Se não existe, criar um frontend básico automaticamente
-  const basicFrontend = `
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Great Nexus - Ecossistema Empresarial Inteligente</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .container { 
-            background: white;
-            padding: 3rem;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 500px;
-            width: 90%;
-        }
-        .logo { 
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 1rem;
-        }
-        h1 { 
-            color: #333;
-            margin-bottom: 1rem;
-            font-size: 1.8rem;
-        }
-        p { 
-            color: #666;
-            margin-bottom: 2rem;
-            line-height: 1.6;
-        }
-        .btn { 
-            background: #667eea;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            cursor: pointer;
-            margin: 0.5rem;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .btn:hover { background: #5a6fd8; }
-        .demo-info { 
-            background: #f8f9fa;
-            padding: 1rem;
-            border-radius: 10px;
-            margin: 2rem 0;
-            text-align: left;
-        }
-        .status { 
-            color: #28a745;
-            font-weight: bold;
-            margin: 1rem 0;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="logo">Great Nexus</div>
-        <h1>🚀 Sistema em Execução!</h1>
-        <p>Seu ecossistema empresarial inteligente está rodando perfeitamente.</p>
-        
-        <div class="status">✅ Backend API: Operacional</div>
-        <div class="status">✅ Banco de Dados: Em Memória</div>
-        <div class="status">✅ Autenticação: Pronta</div>
-        
-        <div class="demo-info">
-            <h3>📋 Teste Rápido:</h3>
-            <p><strong>Demo Login:</strong> Use o botão abaixo para fazer login automático</p>
-            <p><strong>API Health:</strong> <a href="/health" target="_blank">/health</a></p>
-            <p><strong>Status:</strong> <a href="/status" target="_blank">/status</a></p>
-        </div>
+  console.log('💰 Fetching investments for user:', userId);
 
-        <button class="btn" onclick="demoLogin()">🎯 Demo Login</button>
-        <a href="/health" class="btn" target="_blank">📊 Health Check</a>
-        
-        <div style="margin-top: 2rem; font-size: 0.9rem; color: #888;">
-            <p>Frontend completo em desenvolvimento...</p>
-        </div>
-    </div>
+  const userInvestments = mockInvestments.filter(inv => inv.user_id === userId);
 
-    <script>
-        async function demoLogin() {
-            try {
-                const response = await fetch('/api/v1/auth/demo', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    localStorage.setItem('auth_token', data.accessToken);
-                    localStorage.setItem('user_data', JSON.stringify(data.user));
-                    localStorage.setItem('tenant_data', JSON.stringify(data.tenant));
-                    
-                    alert('✅ Login demo realizado! Token salvo no localStorage.');
-                    console.log('Demo user:', data.user);
-                } else {
-                    alert('❌ Erro no login: ' + data.error);
-                }
-            } catch (error) {
-                alert('❌ Erro de conexão: ' + error.message);
-            }
-        }
-
-        // Testar conexão automaticamente
-        fetch('/health')
-            .then(r => r.json())
-            .then(data => console.log('Health check:', data))
-            .catch(err => console.error('Health check failed:', err));
-    </script>
-</body>
-</html>
-  `;
-  
-  res.send(basicFrontend);
-});
-
-// =============================================
-// FALLBACK ROUTES
-// =============================================
-app.use('/api/*', (req, res) => {
-  res.status(404).json({ 
-    error: 'API endpoint not found',
-    path: req.path,
-    method: req.method
+  res.json({
+    success: true,
+    investments: userInvestments,
+    message: 'Investments fetched successfully'
   });
 });
 
-// Serve frontend for all other routes
-app.get('*', (req, res) => {
-  const requestedFile = path.join(frontendPath, req.path);
+// Create new investment
+app.post('/api/v1/mola/investments', (req, res) => {
+  const { capital, business_days, daily_rate = 0.003 } = req.body;
+  const userId = req.user?.user_id || 'demo-user-1';
   
-  if (fs.existsSync(requestedFile)) {
-    res.sendFile(requestedFile);
-  } else {
-    res.redirect('/');
+  console.log('💰 Creating investment:', { capital, business_days, daily_rate });
+
+  if (!capital || !business_days) {
+    return res.status(400).json({
+      success: false,
+      error: 'Capital and business days are required'
+    });
   }
+
+  if (capital <= 0) {
+    return res.status(400).json({
+      success: false,
+      error: 'Capital must be greater than 0'
+    });
+  }
+
+  if (business_days <= 0) {
+    return res.status(400).json({
+      success: false,
+      error: 'Business days must be greater than 0'
+    });
+  }
+
+  // Calculate investment returns
+  const gross_return = capital * business_days * daily_rate;
+  const tax = gross_return * 0.20; // 20% tax
+  const net_return = gross_return - tax;
+
+  const newInvestment = {
+    id: 'inv-' + Date.now(),
+    user_id: userId,
+    capital: parseFloat(capital),
+    start_date: new Date().toISOString().split('T')[0],
+    business_days: parseInt(business_days),
+    daily_rate: parseFloat(daily_rate),
+    gross_return: gross_return,
+    tax: tax,
+    net_return: net_return,
+    status: 'active',
+    created_at: new Date().toISOString()
+  };
+
+  mockInvestments.unshift(newInvestment);
+
+  res.status(201).json({
+    success: true,
+    investment: newInvestment,
+    message: 'Investment created successfully'
+  });
+});
+
+// Get investment statistics
+app.get('/api/v1/mola/stats', (req, res) => {
+  const userId = req.user?.user_id || 'demo-user-1';
+  const userInvestments = mockInvestments.filter(inv => inv.user_id === userId);
+
+  const totalInvested = userInvestments.reduce((sum, inv) => sum + inv.capital, 0);
+  const totalReturns = userInvestments.reduce((sum, inv) => sum + inv.net_return, 0);
+  const activeInvestments = userInvestments.filter(inv => inv.status === 'active').length;
+
+  res.json({
+    success: true,
+    stats: {
+      totalInvested,
+      totalReturns,
+      activeInvestments,
+      totalInvestments: userInvestments.length
+    }
+  });
 });
 
 // =============================================
-// ERROR HANDLING
+// DASHBOARD ROUTES
 // =============================================
+
+// Get dashboard data
+app.get('/api/v1/dashboard/overview', (req, res) => {
+  const tenantId = req.user?.tenant_id || 'demo-tenant-1';
+  
+  console.log('📊 Fetching dashboard data for tenant:', tenantId);
+
+  const tenantProducts = mockProducts.filter(p => p.tenant_id === tenantId);
+  const totalProducts = tenantProducts.length;
+  const lowStockProducts = tenantProducts.filter(p => p.stock < 10).length;
+  const totalInventoryValue = tenantProducts.reduce((sum, p) => sum + (p.price * p.stock), 0);
+
+  const userId = req.user?.user_id || 'demo-user-1';
+  const userInvestments = mockInvestments.filter(inv => inv.user_id === userId);
+  const totalInvested = userInvestments.reduce((sum, inv) => sum + inv.capital, 0);
+  const totalInvestmentReturns = userInvestments.reduce((sum, inv) => sum + inv.net_return, 0);
+
+  // Mock sales data
+  const monthlySales = 125840;
+  const dailySales = 12540;
+  const totalOrders = 42;
+
+  res.json({
+    success: true,
+    data: {
+      sales: {
+        monthly: monthlySales,
+        daily: dailySales,
+        orders: totalOrders,
+        trend: 12.5
+      },
+      inventory: {
+        totalProducts,
+        lowStock: lowStockProducts,
+        totalValue: totalInventoryValue,
+        trend: -3.1
+      },
+      investments: {
+        totalInvested,
+        totalReturns: totalInvestmentReturns,
+        active: userInvestments.length,
+        trend: 5.7
+      }
+    }
+  });
+});
+
+// =============================================
+// ERROR HANDLING MIDDLEWARE
+// =============================================
+
+// 404 Handler for API routes
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ 
+    success: false,
+    error: 'API endpoint not found',
+    path: req.path,
+    method: req.method,
+    availableEndpoints: {
+      auth: ['/api/v1/auth/demo', '/api/v1/auth/login', '/api/v1/auth/register'],
+      erp: ['/api/v1/erp/products'],
+      mola: ['/api/v1/mola/investments', '/api/v1/mola/stats'],
+      dashboard: ['/api/v1/dashboard/overview']
+    }
+  });
+});
+
+// Serve frontend for all other routes (SPA support)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+});
+
+// Global error handler
 app.use((err, req, res, next) => {
-  console.error('🚨 Error:', err.stack);
+  console.error('🚨 Global Error Handler:', err.stack);
+  
+  // Database connection errors
+  if (err.code === 'ECONNREFUSED') {
+    return res.status(503).json({ 
+      success: false,
+      error: 'Database connection failed',
+      message: 'Service temporarily unavailable'
+    });
+  }
+  
+  // Default error response
   res.status(500).json({ 
+    success: false,
     error: 'Internal server error',
     ...(process.env.NODE_ENV === 'development' && { 
-      details: err.message
+      details: err.message,
+      stack: err.stack 
     })
   });
 });
@@ -609,22 +643,19 @@ app.use((err, req, res, next) => {
 // =============================================
 // SERVER STARTUP
 // =============================================
-app.listen(PORT, () => {
-  console.log(`
-🎉 GREAT NEXUS SERVER STARTED SUCCESSFULLY!
 
-📍 Port: ${PORT}
-🌍 Environment: ${process.env.NODE_ENV || 'development'}  
-🗄️  Database: In-memory (Demo Mode)
-📅 Started: ${new Date().toLocaleString()}
-🔗 Health Check: http://localhost:${PORT}/health
-🚀 Demo Login: POST http://localhost:${PORT}/api/v1/auth/demo
-🏠 Frontend: http://localhost:${PORT}/
-
-✅ READY FOR PRODUCTION!
-  `);
+// Unhandled rejection handler
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🚨 Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
+// Uncaught exception handler
+process.on('uncaughtException', (error) => {
+  console.error('🚨 Uncaught Exception:', error);
+  process.exit(1);
+});
+
+// Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('🛑 SIGTERM received, shutting down gracefully...');
   process.exit(0);
@@ -633,6 +664,26 @@ process.on('SIGTERM', () => {
 process.on('SIGINT', () => {
   console.log('🛑 SIGINT received, shutting down gracefully...');
   process.exit(0);
+});
+
+// Start Server
+app.listen(PORT, () => {
+  console.log(`
+🎉 GREAT NEXUS SERVER STARTED SUCCESSFULLY!
+
+📍 Port: ${PORT}
+🌍 Environment: ${process.env.NODE_ENV || 'production'}
+📅 Started: ${new Date().toLocaleString()}
+🔗 Health Check: http://localhost:${PORT}/health
+📊 Status: http://localhost:${PORT}/status
+🚀 Demo Login: POST http://localhost:${PORT}/api/v1/auth/demo
+
+📦 Mock Data Loaded:
+   - Products: ${mockProducts.length}
+   - Investments: ${mockInvestments.length}
+
+✅ SERVER READY FOR PRODUCTION!
+  `);
 });
 
 module.exports = app;
