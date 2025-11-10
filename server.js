@@ -1,7 +1,6 @@
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
-const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -74,6 +73,20 @@ let database = {
       min_stock: 3,
       category: 'Eletrônicos',
       created_at: new Date().toISOString()
+    },
+    {
+      id: 'prod-3',
+      tenant_id: 'demo-tenant-1',
+      company_id: 'company-1',
+      sku: 'MOUSE-GAMER',
+      name: 'Mouse Gamer RGB',
+      description: 'Mouse gamer com iluminação RGB',
+      price: 1200.00,
+      cost: 800.00,
+      stock: 25,
+      min_stock: 10,
+      category: 'Eletrônicos',
+      created_at: new Date().toISOString()
     }
   ],
   customers: [
@@ -86,6 +99,16 @@ let database = {
       address: 'Av. 25 de Setembro, 123',
       tax_id: '123456789',
       type: 'business'
+    },
+    {
+      id: 'cust-2',
+      tenant_id: 'demo-tenant-1',
+      name: 'Tech Solutions Lda',
+      email: 'vendas@techsolutions.co.mz',
+      phone: '+258842345678',
+      address: 'Rua da Resistência, 456',
+      tax_id: '987654321',
+      type: 'business'
     }
   ],
   sales: [
@@ -93,6 +116,7 @@ let database = {
       id: 'sale-1',
       tenant_id: 'demo-tenant-1',
       customer_id: 'cust-1',
+      customer_name: 'Empresa ABC Ltda',
       invoice_number: 'INV-2024-001',
       total: 11000.00,
       status: 'completed',
@@ -114,6 +138,26 @@ let database = {
           total: 2500.00
         }
       ]
+    },
+    {
+      id: 'sale-2',
+      tenant_id: 'demo-tenant-1',
+      customer_id: 'cust-2',
+      customer_name: 'Tech Solutions Lda',
+      invoice_number: 'INV-2024-002',
+      total: 2400.00,
+      status: 'completed',
+      payment_method: 'cash',
+      created_at: new Date(Date.now() - 86400000).toISOString(),
+      items: [
+        {
+          product_id: 'prod-3',
+          name: 'Mouse Gamer RGB',
+          quantity: 2,
+          price: 1200.00,
+          total: 2400.00
+        }
+      ]
     }
   ],
   invoices: [
@@ -126,6 +170,16 @@ let database = {
       status: 'paid',
       due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       created_at: new Date().toISOString()
+    },
+    {
+      id: 'inv-2',
+      tenant_id: 'demo-tenant-1',
+      sale_id: 'sale-2',
+      number: 'INV-2024-002',
+      amount: 2400.00,
+      status: 'paid',
+      due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      created_at: new Date(Date.now() - 86400000).toISOString()
     }
   ],
   investments: [
@@ -142,6 +196,20 @@ let database = {
       net_return: 3600.00,
       status: 'active',
       created_at: new Date().toISOString()
+    },
+    {
+      id: 'inv-mola-2',
+      user_id: 'demo-user-1',
+      capital: 25000.00,
+      start_date: '2024-02-01',
+      end_date: '2024-03-01',
+      business_days: 28,
+      daily_rate: 0.003,
+      gross_return: 2100.00,
+      tax: 420.00,
+      net_return: 1680.00,
+      status: 'completed',
+      created_at: new Date(Date.now() - 172800000).toISOString()
     }
   ],
   inventory_movements: [
@@ -153,6 +221,24 @@ let database = {
       quantity: -1,
       reference: 'sale-1',
       created_at: new Date().toISOString()
+    },
+    {
+      id: 'mov-2',
+      tenant_id: 'demo-tenant-1',
+      product_id: 'prod-2',
+      type: 'sale',
+      quantity: -1,
+      reference: 'sale-1',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'mov-3',
+      tenant_id: 'demo-tenant-1',
+      product_id: 'prod-3',
+      type: 'sale',
+      quantity: -2,
+      reference: 'sale-2',
+      created_at: new Date(Date.now() - 86400000).toISOString()
     }
   ]
 };
@@ -189,29 +275,22 @@ function getLowStockProducts(tenantId) {
   );
 }
 
+// Generate unique ID
+function generateId(prefix) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
 // =============================================
-// CREATE FRONTEND WITH ALL FEATURES
+// FRONTEND HTML
 // =============================================
 
-const createCompleteFrontend = () => {
-  try {
-    const frontendPath = path.join(__dirname, 'frontend');
-    
-    if (!fs.existsSync(frontendPath)) {
-      fs.mkdirSync(frontendPath, { recursive: true });
-    }
-
-    const indexHtmlPath = path.join(frontendPath, 'index.html');
-    
-    // COMPLETE HTML WITH ALL GREAT NEXUS FEATURES
-    const completeHtml = `<!DOCTYPE html>
+const frontendHtml = `<!DOCTYPE html>
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Great Nexus - Ecossistema Empresarial Inteligente</title>
     <style>
-        /* COMPLETE CSS FOR ALL FEATURES */
         :root {
             --primary: #2563eb;
             --primary-dark: #1d4ed8;
@@ -247,7 +326,33 @@ const createCompleteFrontend = () => {
             display: none !important;
         }
 
-        /* AUTH SCREENS */
+        /* Loading Screen */
+        #loading-screen {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Auth Screens */
         .auth-screen {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             min-height: 100vh;
@@ -345,15 +450,35 @@ const createCompleteFrontend = () => {
         .divider {
             color: var(--gray-400);
             margin: 1rem 0;
+            text-align: center;
+            position: relative;
         }
 
-        /* MAIN APPLICATION */
+        .divider::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--gray-300);
+            z-index: 1;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 1rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Main Application */
         .main-app {
             display: flex;
             min-height: 100vh;
         }
 
-        /* SIDEBAR */
+        /* Sidebar */
         .sidebar {
             width: 280px;
             background: white;
@@ -424,7 +549,7 @@ const createCompleteFrontend = () => {
             background: var(--gray-100);
         }
 
-        /* MAIN CONTENT */
+        /* Main Content */
         .main-content {
             flex: 1;
             display: flex;
@@ -447,7 +572,7 @@ const createCompleteFrontend = () => {
             overflow-y: auto;
         }
 
-        /* DASHBOARD */
+        /* Dashboard */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -507,7 +632,12 @@ const createCompleteFrontend = () => {
             color: var(--success);
         }
 
-        /* MODULE STYLES */
+        .stat-trend.negative {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+        }
+
+        /* Module Styles */
         .module-content {
             animation: fadeIn 0.3s ease-in;
         }
@@ -529,7 +659,7 @@ const createCompleteFrontend = () => {
             font-size: 1.5rem;
         }
 
-        /* TABLE STYLES */
+        /* Table Styles */
         .table-container {
             background: white;
             border-radius: 12px;
@@ -608,7 +738,7 @@ const createCompleteFrontend = () => {
             color: var(--error);
         }
 
-        /* FORM STYLES */
+        /* Form Styles */
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -629,7 +759,7 @@ const createCompleteFrontend = () => {
             gap: 0.5rem;
         }
 
-        /* MODAL STYLES */
+        /* Modal Styles */
         .modal {
             position: fixed;
             top: 0;
@@ -673,7 +803,7 @@ const createCompleteFrontend = () => {
             justify-content: flex-end;
         }
 
-        /* NOTIFICATIONS */
+        /* Notifications */
         .notifications-container {
             position: fixed;
             top: 20px;
@@ -720,7 +850,7 @@ const createCompleteFrontend = () => {
             }
         }
 
-        /* RESPONSIVE */
+        /* Responsive */
         @media (max-width: 768px) {
             .sidebar {
                 width: 80px;
@@ -740,22 +870,27 @@ const createCompleteFrontend = () => {
             .search-box input {
                 width: 200px;
             }
+
+            .module-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
         }
     </style>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <!-- Loading Screen -->
-    <div id="loading-screen" class="auth-screen">
-        <div style="text-align: center; color: white;">
+    <div id="loading-screen">
+        <div style="text-align: center;">
             <div class="logo" style="font-size: 2rem; margin-bottom: 1rem;">
                 <i class="fas fa-network-wired"></i>
                 Great Nexus
             </div>
-            <div style="width: 48px; height: 48px; border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+            <div class="spinner"></div>
             <p>Inicializando ecossistema empresarial...</p>
         </div>
-        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
     </div>
 
     <!-- Auth Screens -->
@@ -796,7 +931,7 @@ const createCompleteFrontend = () => {
                     </form>
 
                     <div class="demo-section">
-                        <div class="divider">ou</div>
+                        <div class="divider"><span>ou</span></div>
                         <button type="button" id="demo-login-btn" class="btn btn-full" style="background: transparent; border: 2px solid var(--primary); color: var(--primary);">
                             <i class="fas fa-rocket"></i>
                             Entrar com Demo
@@ -961,7 +1096,7 @@ const createCompleteFrontend = () => {
                                 <i class="fas fa-chart-line"></i>
                             </div>
                             <div class="stat-info">
-                                <h3>125.840 MZN</h3>
+                                <h3 id="total-sales">134.400 MZN</h3>
                                 <p>Vendas do Mês</p>
                                 <span class="stat-trend positive">
                                     <i class="fas fa-arrow-up"></i>
@@ -975,8 +1110,8 @@ const createCompleteFrontend = () => {
                                 <i class="fas fa-shopping-cart"></i>
                             </div>
                             <div class="stat-info">
-                                <h3>42</h3>
-                                <p>Novos Pedidos</p>
+                                <h3 id="total-orders">2</h3>
+                                <p>Pedidos Ativos</p>
                                 <span class="stat-trend positive">
                                     <i class="fas fa-arrow-up"></i>
                                     8.2%
@@ -989,11 +1124,11 @@ const createCompleteFrontend = () => {
                                 <i class="fas fa-cube"></i>
                             </div>
                             <div class="stat-info">
-                                <h3>156</h3>
+                                <h3 id="total-products">3</h3>
                                 <p>Produtos em Stock</p>
-                                <span class="stat-trend negative">
-                                    <i class="fas fa-arrow-down"></i>
-                                    3.1%
+                                <span class="stat-trend positive">
+                                    <i class="fas fa-arrow-up"></i>
+                                    15.3%
                                 </span>
                             </div>
                         </div>
@@ -1003,7 +1138,7 @@ const createCompleteFrontend = () => {
                                 <i class="fas fa-wallet"></i>
                             </div>
                             <div class="stat-info">
-                                <h3>89.250 MZN</h3>
+                                <h3 id="total-investments">75.000 MZN</h3>
                                 <p>Great Mola</p>
                                 <span class="stat-trend positive">
                                     <i class="fas fa-arrow-up"></i>
@@ -1050,26 +1185,7 @@ const createCompleteFrontend = () => {
                                 </tr>
                             </thead>
                             <tbody id="recent-activities">
-                                <tr>
-                                    <td>Novo pedido recebido #ORD-0012</td>
-                                    <td>Vendas</td>
-                                    <td>Há 5 minutos</td>
-                                </tr>
-                                <tr>
-                                    <td>Fatura #INV-0045 foi paga</td>
-                                    <td>Faturas</td>
-                                    <td>Há 1 hora</td>
-                                </tr>
-                                <tr>
-                                    <td>Novo cliente registado</td>
-                                    <td>CRM</td>
-                                    <td>Há 2 horas</td>
-                                </tr>
-                                <tr>
-                                    <td>Stock baixo - Monitor LED 24"</td>
-                                    <td>Inventário</td>
-                                    <td>Há 4 horas</td>
-                                </tr>
+                                <!-- Activities will be loaded here -->
                             </tbody>
                         </table>
                     </div>
@@ -1080,11 +1196,11 @@ const createCompleteFrontend = () => {
                     <div class="module-header">
                         <h2>Gestão de Produtos</h2>
                         <div style="display: flex; gap: 1rem;">
-                            <button class="btn" style="background: transparent; border: 1px solid var(--gray-300);">
+                            <button class="btn" style="background: transparent; border: 1px solid var(--gray-300);" onclick="exportProducts()">
                                 <i class="fas fa-download"></i>
                                 Exportar
                             </button>
-                            <button class="btn btn-primary" onclick="showModal('new-product-modal')">
+                            <button class="btn btn-primary" onclick="showNewProductModal()">
                                 <i class="fas fa-plus"></i>
                                 Novo Produto
                             </button>
@@ -1095,9 +1211,9 @@ const createCompleteFrontend = () => {
                         <div class="table-toolbar">
                             <div class="search-box">
                                 <i class="fas fa-search"></i>
-                                <input type="text" id="product-search" placeholder="Pesquisar produtos...">
+                                <input type="text" id="product-search" placeholder="Pesquisar produtos..." onkeyup="filterProducts()">
                             </div>
-                            <button class="btn" style="background: transparent; border: 1px solid var(--gray-300);">
+                            <button class="btn" style="background: transparent; border: 1px solid var(--gray-300);" onclick="showFilterModal()">
                                 <i class="fas fa-filter"></i>
                                 Filtrar
                             </button>
@@ -1125,7 +1241,7 @@ const createCompleteFrontend = () => {
                 <div id="sales-module" class="module-content hidden">
                     <div class="module-header">
                         <h2>Gestão de Vendas</h2>
-                        <button class="btn btn-primary" onclick="showModal('new-sale-modal')">
+                        <button class="btn btn-primary" onclick="showNewSaleModal()">
                             <i class="fas fa-plus"></i>
                             Nova Venda
                         </button>
@@ -1153,7 +1269,7 @@ const createCompleteFrontend = () => {
                 <div id="investments-module" class="module-content hidden">
                     <div class="module-header">
                         <h2>Great Mola - Investimentos</h2>
-                        <button class="btn btn-primary" onclick="showModal('new-investment-modal')">
+                        <button class="btn btn-primary" onclick="showNewInvestmentModal()">
                             <i class="fas fa-plus"></i>
                             Novo Investimento
                         </button>
@@ -1165,7 +1281,7 @@ const createCompleteFrontend = () => {
                                 <i class="fas fa-wallet"></i>
                             </div>
                             <div class="stat-info">
-                                <h3>75.000 MZN</h3>
+                                <h3 id="total-invested">75.000 MZN</h3>
                                 <p>Total Investido</p>
                             </div>
                         </div>
@@ -1174,7 +1290,7 @@ const createCompleteFrontend = () => {
                                 <i class="fas fa-chart-line"></i>
                             </div>
                             <div class="stat-info">
-                                <h3>4.500 MZN</h3>
+                                <h3 id="total-returns">5.280 MZN</h3>
                                 <p>Retornos</p>
                             </div>
                         </div>
@@ -1183,8 +1299,8 @@ const createCompleteFrontend = () => {
                                 <i class="fas fa-list"></i>
                             </div>
                             <div class="stat-info">
-                                <h3>2</h3>
-                                <p>Investimentos Ativos</p>
+                                <h3 id="active-investments">2</h3>
+                                <p>Investimentos</p>
                             </div>
                         </div>
                     </div>
@@ -1290,9 +1406,6 @@ const createCompleteFrontend = () => {
         </main>
     </div>
 
-    <!-- Modals Container -->
-    <div id="modals-container"></div>
-
     <!-- Notifications Container -->
     <div id="notifications-container" class="notifications-container"></div>
 
@@ -1381,6 +1494,8 @@ const createCompleteFrontend = () => {
         // =============================================
         async function handleDemoLogin() {
             try {
+                showNotification('A realizar login demo...', 'info');
+                
                 const response = await apiClient.post('/auth/demo', {});
                 
                 if (response.success) {
@@ -1399,7 +1514,7 @@ const createCompleteFrontend = () => {
                     document.getElementById('main-app').classList.remove('hidden');
 
                     showNotification('Demo login realizado com sucesso!', 'success');
-                    loadDashboardData();
+                    await loadDashboardData();
                 } else {
                     showNotification(response.error || 'Erro no login demo', 'error');
                 }
@@ -1416,7 +1531,10 @@ const createCompleteFrontend = () => {
             document.querySelectorAll('.menu-item').forEach(item => {
                 item.classList.remove('active');
             });
-            document.querySelector(\`[data-module="\${moduleName}"]\`).classList.add('active');
+            const menuItem = document.querySelector(\`[data-module="\${moduleName}"]\`);
+            if (menuItem) {
+                menuItem.classList.add('active');
+            }
 
             // Hide all modules
             document.querySelectorAll('.module-content').forEach(module => {
@@ -1485,8 +1603,56 @@ const createCompleteFrontend = () => {
         }
 
         async function loadDashboardData() {
-            // In a real app, you would fetch this from the API
-            console.log('Loading dashboard data...');
+            try {
+                const [productsRes, salesRes, investmentsRes] = await Promise.all([
+                    apiClient.get('/erp/products'),
+                    apiClient.get('/erp/sales'),
+                    apiClient.get('/mola/investments')
+                ]);
+
+                // Update stats
+                if (salesRes.success) {
+                    const totalSales = salesRes.data.sales.reduce((sum, sale) => sum + sale.total, 0);
+                    document.getElementById('total-sales').textContent = formatCurrency(totalSales);
+                    document.getElementById('total-orders').textContent = salesRes.data.sales.length;
+                }
+
+                if (productsRes.success) {
+                    document.getElementById('total-products').textContent = productsRes.data.products.length;
+                }
+
+                if (investmentsRes.success) {
+                    const totalInvested = investmentsRes.data.investments.reduce((sum, inv) => sum + inv.capital, 0);
+                    const totalReturns = investmentsRes.data.investments.reduce((sum, inv) => sum + inv.net_return, 0);
+                    document.getElementById('total-investments').textContent = formatCurrency(totalInvested);
+                    document.getElementById('total-invested').textContent = formatCurrency(totalInvested);
+                    document.getElementById('total-returns').textContent = formatCurrency(totalReturns);
+                    document.getElementById('active-investments').textContent = investmentsRes.data.investments.length;
+                }
+
+                // Load recent activities
+                loadRecentActivities();
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        async function loadRecentActivities() {
+            const activities = [
+                { description: 'Novo pedido recebido #ORD-0012', module: 'Vendas', time: 'Há 5 minutos' },
+                { description: 'Fatura #INV-0045 foi paga', module: 'Faturas', time: 'Há 1 hora' },
+                { description: 'Novo cliente registado', module: 'CRM', time: 'Há 2 horas' },
+                { description: 'Stock baixo - Monitor LED 24"', module: 'Inventário', time: 'Há 4 horas' }
+            ];
+
+            const tbody = document.getElementById('recent-activities');
+            tbody.innerHTML = activities.map(activity => \`
+                <tr>
+                    <td>\${activity.description}</td>
+                    <td>\${activity.module}</td>
+                    <td>\${activity.time}</td>
+                </tr>
+            \`).join('');
         }
 
         async function loadProducts() {
@@ -1638,8 +1804,8 @@ const createCompleteFrontend = () => {
                     <td>\${(investment.daily_rate * 100).toFixed(1)}%</td>
                     <td>\${formatCurrency(investment.net_return)}</td>
                     <td>
-                        <span style="padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.875rem; background: rgba(16, 185, 129, 0.1); color: var(--success);">
-                            \${investment.status === 'active' ? 'Ativo' : investment.status}
+                        <span style="padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.875rem; background: \${investment.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)'}; color: \${investment.status === 'active' ? 'var(--success)' : 'var(--info)'};">
+                            \${investment.status === 'active' ? 'Ativo' : 'Concluído'}
                         </span>
                     </td>
                     <td>
@@ -1695,8 +1861,29 @@ const createCompleteFrontend = () => {
             }, 5000);
         }
 
-        function showModal(modalId) {
-            showNotification('Funcionalidade em desenvolvimento - Modal: ' + modalId, 'info');
+        // Modal functions
+        function showNewProductModal() {
+            showNotification('Funcionalidade de novo produto em desenvolvimento', 'info');
+        }
+
+        function showNewSaleModal() {
+            showNotification('Funcionalidade de nova venda em desenvolvimento', 'info');
+        }
+
+        function showNewInvestmentModal() {
+            showNotification('Funcionalidade de novo investimento em desenvolvimento', 'info');
+        }
+
+        function exportProducts() {
+            showNotification('Exportação de produtos em desenvolvimento', 'info');
+        }
+
+        function filterProducts() {
+            showNotification('Filtro de produtos em desenvolvimento', 'info');
+        }
+
+        function showFilterModal() {
+            showNotification('Modal de filtro em desenvolvimento', 'info');
         }
 
         function logout() {
@@ -1732,36 +1919,23 @@ const createCompleteFrontend = () => {
                 });
             });
 
+            // Login form
+            document.getElementById('login-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleDemoLogin(); // Use demo login for now
+            });
+
             console.log('🚀 Great Nexus Frontend inicializado!');
         });
     </script>
 </body>
 </html>`;
-      
-      fs.writeFileSync(indexHtmlPath, completeHtml);
-      console.log('✅ Created complete frontend with all features');
-    }
-
-    return true;
-  } catch (error) {
-    console.error('❌ Error creating frontend:', error.message);
-    return false;
-  }
-};
-
-// Initialize complete frontend
-createCompleteFrontend();
 
 // =============================================
-// STATIC FILES SERVING
+// API ROUTES
 // =============================================
 
-app.use(express.static(path.join(__dirname, 'frontend')));
-
-// =============================================
-// HEALTH CHECK & STATUS
-// =============================================
-
+// Health Check
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
@@ -1780,9 +1954,10 @@ app.get('/health', (req, res) => {
   });
 });
 
-// =============================================
-// COMPLETE API ROUTES
-// =============================================
+// Serve frontend
+app.get('/', (req, res) => {
+  res.send(frontendHtml);
+});
 
 // AUTHENTICATION
 app.post('/api/v1/auth/demo', (req, res) => {
@@ -1839,16 +2014,19 @@ app.get('/api/v1/erp/products', (req, res) => {
 });
 
 app.post('/api/v1/erp/products', (req, res) => {
-  const { sku, name, price, stock, category } = req.body;
+  const { sku, name, price, stock, category, description, cost, min_stock } = req.body;
 
   const newProduct = {
-    id: 'prod-' + Date.now(),
+    id: generateId('prod'),
     tenant_id: 'demo-tenant-1',
     company_id: 'company-1',
     sku: sku,
     name: name,
+    description: description || '',
     price: parseFloat(price),
+    cost: parseFloat(cost) || 0,
     stock: parseInt(stock),
+    min_stock: parseInt(min_stock) || 5,
     category: category || 'Geral',
     created_at: new Date().toISOString()
   };
@@ -1869,10 +2047,7 @@ app.get('/api/v1/erp/sales', (req, res) => {
   res.json({
     success: true,
     data: {
-      sales: database.sales.map(sale => ({
-        ...sale,
-        customer_name: 'Cliente Demo'
-      }))
+      sales: database.sales
     }
   });
 });
@@ -1880,24 +2055,62 @@ app.get('/api/v1/erp/sales', (req, res) => {
 app.post('/api/v1/erp/sales', (req, res) => {
   const { customer_id, items, payment_method } = req.body;
 
+  const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const customer = database.customers.find(c => c.id === customer_id);
+
   const newSale = {
-    id: 'sale-' + Date.now(),
+    id: generateId('sale'),
     tenant_id: 'demo-tenant-1',
     customer_id: customer_id,
+    customer_name: customer ? customer.name : 'Cliente',
     invoice_number: generateInvoiceNumber(),
-    total: items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+    total: total,
     status: 'completed',
-    payment_method: payment_method,
+    payment_method: payment_method || 'cash',
     created_at: new Date().toISOString(),
     items: items
   };
 
   database.sales.push(newSale);
 
+  // Update inventory
+  items.forEach(item => {
+    const product = database.products.find(p => p.id === item.product_id);
+    if (product) {
+      product.stock -= item.quantity;
+      
+      // Add inventory movement
+      database.inventory_movements.push({
+        id: generateId('mov'),
+        tenant_id: 'demo-tenant-1',
+        product_id: item.product_id,
+        type: 'sale',
+        quantity: -item.quantity,
+        reference: newSale.id,
+        created_at: new Date().toISOString()
+      });
+    }
+  });
+
+  // Create invoice
+  const newInvoice = {
+    id: generateId('inv'),
+    tenant_id: 'demo-tenant-1',
+    sale_id: newSale.id,
+    number: newSale.invoice_number,
+    amount: total,
+    status: 'paid',
+    due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    created_at: new Date().toISOString()
+  };
+
+  database.invoices.push(newInvoice);
+
   res.json({
     success: true,
     data: {
       sale: newSale,
+      invoice: newInvoice,
       message: 'Sale created successfully'
     }
   });
@@ -1919,10 +2132,11 @@ app.post('/api/v1/mola/investments', (req, res) => {
   const returns = calculateInvestmentReturns(capital, business_days, daily_rate);
 
   const newInvestment = {
-    id: 'inv-mola-' + Date.now(),
+    id: generateId('inv-mola'),
     user_id: 'demo-user-1',
     capital: parseFloat(capital),
     start_date: new Date().toISOString().split('T')[0],
+    end_date: new Date(Date.now() + business_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     business_days: parseInt(business_days),
     daily_rate: parseFloat(daily_rate),
     gross_return: returns.gross_return,
@@ -1962,7 +2176,8 @@ app.get('/api/v1/erp/inventory', (req, res) => {
     data: {
       products: database.products,
       low_stock: lowStockProducts,
-      total_value: database.products.reduce((sum, p) => sum + (p.price * p.stock), 0)
+      total_value: database.products.reduce((sum, p) => sum + (p.price * p.stock), 0),
+      movements: database.inventory_movements.slice(-10) // Last 10 movements
     }
   });
 });
@@ -1972,7 +2187,7 @@ app.get('/api/v1/erp/inventory', (req, res) => {
 // =============================================
 
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+  res.send(frontendHtml);
 });
 
 // =============================================
