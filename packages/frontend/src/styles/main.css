@@ -1458,4 +1458,17 @@ input:focus, select:focus {
     .investment-stat-card,
     .investment-item,
     .modal-content {
-        background: var(--gray-
+        background: var(--gray-100);
+        border-color: var(--gray-200);
+    }
+    
+    input, select {
+        background: var(--gray-50);
+        border-color: var(--gray-300);
+        color: var(--gray-800);
+    }
+    
+    input:focus, select:focus {
+        border-color: var(--primary-color);
+    }
+}
