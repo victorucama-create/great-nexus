@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Great Nexus - Ecossistema Empresarial Inteligente</title>
+    <link rel="stylesheet" href="src/styles/main.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="loading-screen">
+            <div class="loading-content">
+                <div class="logo">
+                    <i class="fas fa-network-wired"></i>
+                    <span>Great Nexus</span>
+                </div>
+                <div class="loading-spinner"></div>
+                <p>Carregando ecossistema empresarial...</p>
+            </div>
+        </div>
+
+        <!-- Login Screen -->
+        <div id="login-screen" class="auth-screen">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <div class="logo">
+                        <i class="fas fa-network-wired"></i>
+                        <span>Great Nexus</span>
+                    </div>
+                    <h1>Bem-vindo de volta</h1>
+                    <p>Entre na sua conta para continuar</p>
+                </div>
+
+                <form id="login-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" required placeholder="seu@email.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" required placeholder="Sua password">
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox">
+                            <input type="checkbox" id="remember-me">
+                            <span>Lembrar-me</span>
+                        </label>
+                        <a href="#" class="forgot-password">Esqueceu a password?</a>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Entrar
+                    </button>
+                </form>
+
+                <div class="auth-footer">
+                    <p>Não tem uma conta? <a href="#" id="show-register">Registe-se</a></p>
+                </div>
+            </div>
+
+            <div class="auth-background">
+                <div class="background-content">
+                    <h2>Ecossistema Empresarial Inteligente</h2>
+                    <p>Integre ERP, CRM, MRP, B2B Marketplace e Fintech numa única plataforma</p>
+                    <div class="features">
+                        <div class="feature">
+                            <i class="fas fa-cube"></i>
+                            <span>Gestão Completa</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Business Intelligence</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-handshake"></i>
+                            <span>Marketplace B2B</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Register Screen -->
+        <div id="register-screen" class="auth-screen hidden">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <div class="logo">
+                        <i class="fas fa-network-wired"></i>
+                        <span>Great Nexus</span>
+                    </div>
+                    <h1>Criar Nova Conta</h1>
+                    <p>Comece sua jornada empresarial connosco</p>
+                </div>
+
+                <form id="register-form" class="auth-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="register-name">Nome Completo</label>
+                            <input type="text" id="register-name" required placeholder="Seu nome">
+                        </div>
+                        <div class="form-group">
+                            <label for="register-company">Nome da Empresa</label>
+                            <input type="text" id="register-company" required placeholder="Nome da empresa">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" required placeholder="seu@empresa.com">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="register-password">Password</label>
+                            <input type="password" id="register-password" required placeholder="Mínimo 8 caracteres">
+                        </div>
+                        <div class="form-group">
+                            <label for="register-confirm-password">Confirmar Password</label>
+                            <input type="password" id="register-confirm-password" required placeholder="Repita a password">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="register-country">País</label>
+                            <select id="register-country" required>
+                                <option value="">Selecione o país</option>
+                                <option value="MZ">Moçambique</option>
+                                <option value="AO">Angola</option>
+                                <option value="PT">Portugal</option>
+                                <option value="BR">Brasil</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-currency">Moeda</label>
+                            <select id="register-currency" required>
+                                <option value="">Selecione a moeda</option>
+                                <option value="MZN">MZN - Metical</option>
+                                <option value="USD">USD - Dólar Americano</option>
+                                <option value="EUR">EUR - Euro</option>
+                                <option value="AOA">AOA - Kwanza</option>
+                                <option value="BRL">BRL - Real</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox">
+                            <input type="checkbox" id="accept-terms" required>
+                            <span>Concordo com os <a href="#">Termos de Serviço</a> e <a href="#">Política de Privacidade</a></span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full">
+                        <i class="fas fa-user-plus"></i>
+                        Criar Conta
+                    </button>
+                </form>
+
+                <div class="auth-footer">
+                    <p>Já tem uma conta? <a href="#" id="show-login">Entrar</a></p>
+                </div>
+            </div>
+
+            <div class="auth-background">
+                <div class="background-content">
+                    <h2>Comece sua Transformação Digital</h2>
+                    <p>Tudo o que sua empresa precisa num único ecossistema integrado</p>
+                    <div class="features">
+                        <div class="feature">
+                            <i class="fas fa-store"></i>
+                            <span>ERP & Vendas</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-industry"></i>
+                            <span>Produção (MRP)</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-wallet"></i>
+                            <span>Great Mola</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Application -->
+        <div id="main-app" class="main-app hidden">
+            <!-- Sidebar -->
+            <nav class="sidebar">
+                <div class="sidebar-header">
+                    <div class="logo">
+                        <i class="fas fa-network-wired"></i>
+                        <span>Great Nexus</span>
+                    </div>
+                    <button id="sidebar-toggle" class="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+
+                <div class="sidebar-content">
+                    <div class="tenant-info">
+                        <div class="tenant-avatar">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="tenant-details">
+                            <span class="tenant-name" id="current-tenant">Minha Empresa</span>
+                            <span class="tenant-plan">Plano Starter</span>
+                        </div>
+                    </div>
+
+                    <ul class="sidebar-menu">
+                        <li class="menu-item active" data-module="dashboard">
+                            <a href="#">
+                                <i class="fas fa-home"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        
+                        <li class="menu-section">ERP & Gestão</li>
+                        <li class="menu-item" data-module="products">
+                            <a href="#">
+                                <i class="fas fa-cube"></i>
+                                <span>Produtos</span>
+                            </a>
+                        </li>
+                        <li class="menu-item" data-module="sales">
+                            <a href="#">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Vendas</span>
+                            </a>
+                        </li>
+                        <li class="menu-item" data-module="inventory">
+                            <a href="#">
+                                <i class="fas fa-warehouse"></i>
+                                <span>Inventário</span>
+                            </a>
+                        </li>
+                        <li class="menu-item" data-module="invoices">
+                            <a href="#">
+                                <i class="fas fa-file-invoice"></i>
+                                <span>Faturas</span>
+                            </a>
+                        </li>
+
+                        <li class="menu-section">Produção</li>
+                        <li class="menu-item" data-module="mrp">
+                            <a href="#">
+                                <i class="fas fa-industry"></i>
+                                <span>Planeamento (MRP)</span>
+                            </a>
+                        </li>
+                        <li class="menu-item" data-module="production">
+                            <a href="#">
+                                <i class="fas fa-cogs"></i>
+                                <span>Ordens Produção</span>
+                            </a>
+                        </li>
+
+                        <li class="menu-section">Clientes & Marketing</li>
+                        <li class="menu-item" data-module="crm">
+                            <a href="#">
+                                <i class="fas fa-users"></i>
+                                <span>CRM</span>
+                            </a>
+                        </li>
+                        <li class="menu-item" data-module="marketing">
+                            <a href="#">
+                                <i class="fas fa-bullhorn"></i>
+                                <span>Marketing</span>
+                            </a>
+                        </li>
+
+                        <li class="menu-section">Great Mola</li>
+                        <li class="menu-item" data-module="investments">
+                            <a href="#">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Investimentos</span>
+                            </a>
+                        </li>
+                        <li class="menu-item" data-module="wallet">
+                            <a href="#">
+                                <i class="fas fa-wallet"></i>
+                                <span>Carteira</span>
+                            </a>
+                        </li>
+
+                        <li class="menu-section">Marketplace</li>
+                        <li class="menu-item" data-module="marketplace">
+                            <a href="#">
+                                <i class="fas fa-store"></i>
+                                <span>B2B Marketplace</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="sidebar-footer">
+                    <div class="user-menu">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="user-details">
+                            <span class="user-name" id="current-user">Utilizador</span>
+                            <span class="user-role">Administrador</span>
+                        </div>
+                        <div class="user-actions">
+                            <button id="user-menu-toggle">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="user-dropdown" class="user-dropdown hidden">
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-cog"></i>
+                            Configurações
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-building"></i>
+                            Minha Empresa
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-question-circle"></i>
+                            Ajuda & Suporte
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" id="logout-btn" class="dropdown-item">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Terminar Sessão
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Header -->
+                <header class="content-header">
+                    <div class="header-left">
+                        <h1 id="page-title">Dashboard</h1>
+                        <div class="breadcrumb">
+                            <span>Great Nexus</span>
+                            <i class="fas fa-chevron-right"></i>
+                            <span id="breadcrumb-current">Dashboard</span>
+                        </div>
+                    </div>
+
+                    <div class="header-right">
+                        <div class="header-actions">
+                            <button class="header-btn" id="notifications-btn">
+                                <i class="fas fa-bell"></i>
+                                <span class="notification-badge">3</span>
+                            </button>
+                            <button class="header-btn" id="search-btn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <button class="header-btn" id="help-btn">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+
+                        <div class="quick-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Vendas Hoje</span>
+                                <span class="stat-value">12.540 MZN</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Pedidos</span>
+                                <span class="stat-value">8</span>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Content Area -->
+                <div class="content-area">
+                    <!-- Dashboard Module -->
+                    <div id="dashboard-module" class="module-content">
+                        <div class="dashboard-grid">
+                            <!-- Stats Cards -->
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-icon primary">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <h3>125.840 MZN</h3>
+                                        <p>Vendas do Mês</p>
+                                        <span class="stat-trend positive">
+                                            <i class="fas fa-arrow-up"></i>
+                                            12.5%
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="stat-card">
+                                    <div class="stat-icon success">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <h3>42</h3>
+                                        <p>Novos Pedidos</p>
+                                        <span class="stat-trend positive">
+                                            <i class="fas fa-arrow-up"></i>
+                                            8.2%
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="stat-card">
+                                    <div class="stat-card">
+                                        <div class="stat-icon warning">
+                                            <i class="fas fa-cube"></i>
+                                        </div>
+                                        <div class="stat-info">
+                                            <h3>156</h3>
+                                            <p>Produtos em Stock</p>
+                                            <span class="stat-trend negative">
+                                                <i class="fas fa-arrow-down"></i>
+                                                3.1%
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="stat-card">
+                                    <div class="stat-icon info">
+                                        <i class="fas fa-wallet"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <h3>89.250 MZN</h3>
+                                        <p>Great Mola</p>
+                                        <span class="stat-trend positive">
+                                            <i class="fas fa-arrow-up"></i>
+                                            5.7%
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Charts and Recent Activity -->
+                            <div class="content-grid">
+                                <div class="chart-container">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h3>Vendas dos Últimos 7 Dias</h3>
+                                            <select class="chart-filter">
+                                                <option>7 Dias</option>
+                                                <option>30 Dias</option>
+                                                <option>90 Dias</option>
+                                            </select>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="sales-chart" class="chart-placeholder">
+                                                <canvas id="salesChart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="activity-container">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h3>Atividade Recente</h3>
+                                            <button class="btn btn-sm btn-outline">Ver Tudo</button>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="activity-list">
+                                                <div class="activity-item">
+                                                    <div class="activity-icon success">
+                                                        <i class="fas fa-shopping-cart"></i>
+                                                    </div>
+                                                    <div class="activity-content">
+                                                        <p>Novo pedido recebido #ORD-0012</p>
+                                                        <span class="activity-time">Há 5 minutos</span>
+                                                    </div>
+                                                </div>
+                                                <div class="activity-item">
+                                                    <div class="activity-icon primary">
+                                                        <i class="fas fa-file-invoice"></i>
+                                                    </div>
+                                                    <div class="activity-content">
+                                                        <p>Fatura #INV-0045 foi paga</p>
+                                                        <span class="activity-time">Há 1 hora</span>
+                                                    </div>
+                                                </div>
+                                                <div class="activity-item">
+                                                    <div class="activity-icon info">
+                                                        <i class="fas fa-user"></i>
+                                                    </div>
+                                                    <div class="activity-content">
+                                                        <p>Novo cliente registado: Empresa XYZ</p>
+                                                        <span class="activity-time">Há 2 horas</span>
+                                                    </div>
+                                                </div>
+                                                <div class="activity-item">
+                                                    <div class="activity-icon warning">
+                                                        <i class="fas fa-exclamation-triangle"></i>
+                                                    </div>
+                                                    <div class="activity-content">
+                                                        <p>Stock baixo para o produto "Monitor LED 24"</p>
+                                                        <span class="activity-time">Há 4 horas</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Quick Actions -->
+                            <div class="quick-actions-grid">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3>Ações Rápidas</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="actions-grid">
+                                            <button class="action-btn" data-action="new-sale">
+                                                <i class="fas fa-plus-circle"></i>
+                                                <span>Nova Venda</span>
+                                            </button>
+                                            <button class="action-btn" data-action="new-product">
+                                                <i class="fas fa-cube"></i>
+                                                <span>Add Produto</span>
+                                            </button>
+                                            <button class="action-btn" data-action="new-invoice">
+                                                <i class="fas fa-file-invoice"></i>
+                                                <span>Criar Fatura</span>
+                                            </button>
+                                            <button class="action-btn" data-action="new-investment">
+                                                <i class="fas fa-chart-line"></i>
+                                                <span>Investir</span>
+                                            </button>
+                                            <button class="action-btn" data-action="b2b-market">
+                                                <i class="fas fa-store"></i>
+                                                <span>Marketplace</span>
+                                            </button>
+                                            <button class="action-btn" data-action="reports">
+                                                <i class="fas fa-chart-bar"></i>
+                                                <span>Relatórios</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Products Module -->
+                    <div id="products-module" class="module-content hidden">
+                        <div class="module-header">
+                            <h2>Gestão de Produtos</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-outline">
+                                    <i class="fas fa-download"></i>
+                                    Exportar
+                                </button>
+                                <button class="btn btn-primary" id="new-product-btn">
+                                    <i class="fas fa-plus"></i>
+                                    Novo Produto
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="products-container">
+                            <!-- Products content will be loaded here -->
+                            <div class="empty-state">
+                                <i class="fas fa-cube"></i>
+                                <h3>Sem produtos</h3>
+                                <p>Comece por adicionar seu primeiro produto ao inventário.</p>
+                                <button class="btn btn-primary">Criar Primeiro Produto</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Other modules will be added similarly -->
+                    <div id="sales-module" class="module-content hidden">
+                        <!-- Sales content -->
+                    </div>
+
+                    <div id="investments-module" class="module-content hidden">
+                        <!-- Investments content -->
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Notifications Panel -->
+        <div id="notifications-panel" class="notifications-panel hidden">
+            <div class="panel-header">
+                <h3>Notificações</h3>
+                <button class="panel-close" id="close-notifications">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="panel-content">
+                <div class="notification-list">
+                    <!-- Notifications will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Panel -->
+        <div id="search-panel" class="search-panel hidden">
+            <div class="search-header">
+                <div class="search-input-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="global-search" placeholder="Pesquisar em todo o sistema...">
+                    <button class="search-close" id="close-search">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="search-results">
+                <!-- Search results will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="src/js/auth.js"></script>
+    <script src="src/js/app.js"></script>
+    <script src="src/js/modules/dashboard.js"></script>
+    <script src="src/js/modules/products.js"></script>
+    <script src="src/js/api/client.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>
