@@ -18,172 +18,181 @@
                     <span>Great Nexus</span>
                 </div>
                 <div class="loading-spinner"></div>
-                <p>Carregando ecossistema empresarial...</p>
+                <p>Inicializando ecossistema empresarial...</p>
             </div>
         </div>
 
-        <!-- Login Screen -->
-        <div id="login-screen" class="auth-screen">
-            <div class="auth-container">
-                <div class="auth-header">
-                    <div class="logo">
-                        <i class="fas fa-network-wired"></i>
-                        <span>Great Nexus</span>
+        <!-- Auth Screens -->
+        <div id="auth-screens">
+            <!-- Login Screen -->
+            <div id="login-screen" class="auth-screen">
+                <div class="auth-container">
+                    <div class="auth-header">
+                        <div class="logo">
+                            <i class="fas fa-network-wired"></i>
+                            <span>Great Nexus</span>
+                        </div>
+                        <h1>Bem-vindo de volta</h1>
+                        <p>Entre na sua conta para continuar</p>
                     </div>
-                    <h1>Bem-vindo de volta</h1>
-                    <p>Entre na sua conta para continuar</p>
+
+                    <form id="login-form" class="auth-form">
+                        <div class="form-group">
+                            <label for="login-email">Email</label>
+                            <input type="email" id="login-email" required placeholder="seu@email.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="login-password">Password</label>
+                            <input type="password" id="login-password" required placeholder="Sua password">
+                        </div>
+
+                        <div class="form-options">
+                            <label class="checkbox">
+                                <input type="checkbox" id="remember-me">
+                                <span>Lembrar-me</span>
+                            </label>
+                            <a href="#" class="forgot-password">Esqueceu a password?</a>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-full">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Entrar
+                        </button>
+
+                        <div class="demo-section">
+                            <div class="divider">ou</div>
+                            <button type="button" id="demo-login-btn" class="btn btn-outline btn-full">
+                                <i class="fas fa-rocket"></i>
+                                Entrar com Demo
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="auth-footer">
+                        <p>Não tem uma conta? <a href="#" id="show-register">Registe-se</a></p>
+                    </div>
                 </div>
 
-                <form id="login-form" class="auth-form">
-                    <div class="form-group">
-                        <label for="login-email">Email</label>
-                        <input type="email" id="login-email" required placeholder="seu@email.com">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="login-password">Password</label>
-                        <input type="password" id="login-password" required placeholder="Sua password">
-                    </div>
-
-                    <div class="form-options">
-                        <label class="checkbox">
-                            <input type="checkbox" id="remember-me">
-                            <span>Lembrar-me</span>
-                        </label>
-                        <a href="#" class="forgot-password">Esqueceu a password?</a>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-full">
-                        <i class="fas fa-sign-in-alt"></i>
-                        Entrar
-                    </button>
-                </form>
-
-                <div class="auth-footer">
-                    <p>Não tem uma conta? <a href="#" id="show-register">Registe-se</a></p>
-                </div>
-            </div>
-
-            <div class="auth-background">
-                <div class="background-content">
-                    <h2>Ecossistema Empresarial Inteligente</h2>
-                    <p>Integre ERP, CRM, MRP, B2B Marketplace e Fintech numa única plataforma</p>
-                    <div class="features">
-                        <div class="feature">
-                            <i class="fas fa-cube"></i>
-                            <span>Gestão Completa</span>
-                        </div>
-                        <div class="feature">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Business Intelligence</span>
-                        </div>
-                        <div class="feature">
-                            <i class="fas fa-handshake"></i>
-                            <span>Marketplace B2B</span>
+                <div class="auth-background">
+                    <div class="background-content">
+                        <h2>Ecossistema Empresarial Inteligente</h2>
+                        <p>Integre ERP, CRM, MRP, B2B Marketplace e Fintech numa única plataforma</p>
+                        <div class="features">
+                            <div class="feature">
+                                <i class="fas fa-cube"></i>
+                                <span>Gestão Completa</span>
+                            </div>
+                            <div class="feature">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Business Intelligence</span>
+                            </div>
+                            <div class="feature">
+                                <i class="fas fa-handshake"></i>
+                                <span>Marketplace B2B</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Register Screen -->
-        <div id="register-screen" class="auth-screen hidden">
-            <div class="auth-container">
-                <div class="auth-header">
-                    <div class="logo">
-                        <i class="fas fa-network-wired"></i>
-                        <span>Great Nexus</span>
-                    </div>
-                    <h1>Criar Nova Conta</h1>
-                    <p>Comece sua jornada empresarial connosco</p>
-                </div>
-
-                <form id="register-form" class="auth-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="register-name">Nome Completo</label>
-                            <input type="text" id="register-name" required placeholder="Seu nome">
-                        </div>
-                        <div class="form-group">
-                            <label for="register-company">Nome da Empresa</label>
-                            <input type="text" id="register-company" required placeholder="Nome da empresa">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="register-email">Email</label>
-                        <input type="email" id="register-email" required placeholder="seu@empresa.com">
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="register-password">Password</label>
-                            <input type="password" id="register-password" required placeholder="Mínimo 8 caracteres">
-                        </div>
-                        <div class="form-group">
-                            <label for="register-confirm-password">Confirmar Password</label>
-                            <input type="password" id="register-confirm-password" required placeholder="Repita a password">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="register-country">País</label>
-                            <select id="register-country" required>
-                                <option value="">Selecione o país</option>
-                                <option value="MZ">Moçambique</option>
-                                <option value="AO">Angola</option>
-                                <option value="PT">Portugal</option>
-                                <option value="BR">Brasil</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="register-currency">Moeda</label>
-                            <select id="register-currency" required>
-                                <option value="">Selecione a moeda</option>
-                                <option value="MZN">MZN - Metical</option>
-                                <option value="USD">USD - Dólar Americano</option>
-                                <option value="EUR">EUR - Euro</option>
-                                <option value="AOA">AOA - Kwanza</option>
-                                <option value="BRL">BRL - Real</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-options">
-                        <label class="checkbox">
-                            <input type="checkbox" id="accept-terms" required>
-                            <span>Concordo com os <a href="#">Termos de Serviço</a> e <a href="#">Política de Privacidade</a></span>
-                        </label>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-full">
-                        <i class="fas fa-user-plus"></i>
-                        Criar Conta
-                    </button>
-                </form>
-
-                <div class="auth-footer">
-                    <p>Já tem uma conta? <a href="#" id="show-login">Entrar</a></p>
                 </div>
             </div>
 
-            <div class="auth-background">
-                <div class="background-content">
-                    <h2>Comece sua Transformação Digital</h2>
-                    <p>Tudo o que sua empresa precisa num único ecossistema integrado</p>
-                    <div class="features">
-                        <div class="feature">
-                            <i class="fas fa-store"></i>
-                            <span>ERP & Vendas</span>
+            <!-- Register Screen -->
+            <div id="register-screen" class="auth-screen hidden">
+                <div class="auth-container">
+                    <div class="auth-header">
+                        <div class="logo">
+                            <i class="fas fa-network-wired"></i>
+                            <span>Great Nexus</span>
                         </div>
-                        <div class="feature">
-                            <i class="fas fa-industry"></i>
-                            <span>Produção (MRP)</span>
+                        <h1>Criar Nova Conta</h1>
+                        <p>Comece sua jornada empresarial connosco</p>
+                    </div>
+
+                    <form id="register-form" class="auth-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="register-name">Nome Completo</label>
+                                <input type="text" id="register-name" required placeholder="Seu nome">
+                            </div>
+                            <div class="form-group">
+                                <label for="register-company">Nome da Empresa</label>
+                                <input type="text" id="register-company" required placeholder="Nome da empresa">
+                            </div>
                         </div>
-                        <div class="feature">
-                            <i class="fas fa-wallet"></i>
-                            <span>Great Mola</span>
+
+                        <div class="form-group">
+                            <label for="register-email">Email</label>
+                            <input type="email" id="register-email" required placeholder="seu@empresa.com">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="register-password">Password</label>
+                                <input type="password" id="register-password" required placeholder="Mínimo 8 caracteres">
+                            </div>
+                            <div class="form-group">
+                                <label for="register-confirm-password">Confirmar Password</label>
+                                <input type="password" id="register-confirm-password" required placeholder="Repita a password">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="register-country">País</label>
+                                <select id="register-country" required>
+                                    <option value="">Selecione o país</option>
+                                    <option value="MZ" selected>Moçambique</option>
+                                    <option value="AO">Angola</option>
+                                    <option value="PT">Portugal</option>
+                                    <option value="BR">Brasil</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="register-currency">Moeda</label>
+                                <select id="register-currency" required>
+                                    <option value="">Selecione a moeda</option>
+                                    <option value="MZN" selected>MZN - Metical</option>
+                                    <option value="USD">USD - Dólar Americano</option>
+                                    <option value="EUR">EUR - Euro</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-options">
+                            <label class="checkbox">
+                                <input type="checkbox" id="accept-terms" required>
+                                <span>Concordo com os <a href="#">Termos de Serviço</a> e <a href="#">Política de Privacidade</a></span>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-full">
+                            <i class="fas fa-user-plus"></i>
+                            Criar Conta
+                        </button>
+                    </form>
+
+                    <div class="auth-footer">
+                        <p>Já tem uma conta? <a href="#" id="show-login">Entrar</a></p>
+                    </div>
+                </div>
+
+                <div class="auth-background">
+                    <div class="background-content">
+                        <h2>Comece sua Transformação Digital</h2>
+                        <p>Tudo o que sua empresa precisa num único ecossistema integrado</p>
+                        <div class="features">
+                            <div class="feature">
+                                <i class="fas fa-store"></i>
+                                <span>ERP & Vendas</span>
+                            </div>
+                            <div class="feature">
+                                <i class="fas fa-industry"></i>
+                                <span>Produção (MRP)</span>
+                            </div>
+                            <div class="feature">
+                                <i class="fas fa-wallet"></i>
+                                <span>Great Mola</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -256,26 +265,6 @@
                                 <span>Planeamento (MRP)</span>
                             </a>
                         </li>
-                        <li class="menu-item" data-module="production">
-                            <a href="#">
-                                <i class="fas fa-cogs"></i>
-                                <span>Ordens Produção</span>
-                            </a>
-                        </li>
-
-                        <li class="menu-section">Clientes & Marketing</li>
-                        <li class="menu-item" data-module="crm">
-                            <a href="#">
-                                <i class="fas fa-users"></i>
-                                <span>CRM</span>
-                            </a>
-                        </li>
-                        <li class="menu-item" data-module="marketing">
-                            <a href="#">
-                                <i class="fas fa-bullhorn"></i>
-                                <span>Marketing</span>
-                            </a>
-                        </li>
 
                         <li class="menu-section">Great Mola</li>
                         <li class="menu-item" data-module="investments">
@@ -288,14 +277,6 @@
                             <a href="#">
                                 <i class="fas fa-wallet"></i>
                                 <span>Carteira</span>
-                            </a>
-                        </li>
-
-                        <li class="menu-section">Marketplace</li>
-                        <li class="menu-item" data-module="marketplace">
-                            <a href="#">
-                                <i class="fas fa-store"></i>
-                                <span>B2B Marketplace</span>
                             </a>
                         </li>
                     </ul>
@@ -325,10 +306,6 @@
                             <i class="fas fa-building"></i>
                             Minha Empresa
                         </a>
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-question-circle"></i>
-                            Ajuda & Suporte
-                        </a>
                         <div class="dropdown-divider"></div>
                         <a href="#" id="logout-btn" class="dropdown-item">
                             <i class="fas fa-sign-out-alt"></i>
@@ -357,9 +334,6 @@
                                 <i class="fas fa-bell"></i>
                                 <span class="notification-badge">3</span>
                             </button>
-                            <button class="header-btn" id="search-btn">
-                                <i class="fas fa-search"></i>
-                            </button>
                             <button class="header-btn" id="help-btn">
                                 <i class="fas fa-question-circle"></i>
                             </button>
@@ -369,10 +343,6 @@
                             <div class="stat-item">
                                 <span class="stat-label">Vendas Hoje</span>
                                 <span class="stat-value">12.540 MZN</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">Pedidos</span>
-                                <span class="stat-value">8</span>
                             </div>
                         </div>
                     </div>
@@ -390,7 +360,7 @@
                                         <i class="fas fa-chart-line"></i>
                                     </div>
                                     <div class="stat-info">
-                                        <h3>125.840 MZN</h3>
+                                        <h3 id="sales-month">125.840 MZN</h3>
                                         <p>Vendas do Mês</p>
                                         <span class="stat-trend positive">
                                             <i class="fas fa-arrow-up"></i>
@@ -404,7 +374,7 @@
                                         <i class="fas fa-shopping-cart"></i>
                                     </div>
                                     <div class="stat-info">
-                                        <h3>42</h3>
+                                        <h3 id="total-orders">42</h3>
                                         <p>Novos Pedidos</p>
                                         <span class="stat-trend positive">
                                             <i class="fas fa-arrow-up"></i>
@@ -414,18 +384,16 @@
                                 </div>
 
                                 <div class="stat-card">
-                                    <div class="stat-card">
-                                        <div class="stat-icon warning">
-                                            <i class="fas fa-cube"></i>
-                                        </div>
-                                        <div class="stat-info">
-                                            <h3>156</h3>
-                                            <p>Produtos em Stock</p>
-                                            <span class="stat-trend negative">
-                                                <i class="fas fa-arrow-down"></i>
-                                                3.1%
-                                            </span>
-                                        </div>
+                                    <div class="stat-icon warning">
+                                        <i class="fas fa-cube"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <h3 id="total-products">156</h3>
+                                        <p>Produtos em Stock</p>
+                                        <span class="stat-trend negative">
+                                            <i class="fas fa-arrow-down"></i>
+                                            3.1%
+                                        </span>
                                     </div>
                                 </div>
 
@@ -434,7 +402,7 @@
                                         <i class="fas fa-wallet"></i>
                                     </div>
                                     <div class="stat-info">
-                                        <h3>89.250 MZN</h3>
+                                        <h3 id="mola-balance">89.250 MZN</h3>
                                         <p>Great Mola</p>
                                         <span class="stat-trend positive">
                                             <i class="fas fa-arrow-up"></i>
@@ -450,11 +418,6 @@
                                     <div class="card">
                                         <div class="card-header">
                                             <h3>Vendas dos Últimos 7 Dias</h3>
-                                            <select class="chart-filter">
-                                                <option>7 Dias</option>
-                                                <option>30 Dias</option>
-                                                <option>90 Dias</option>
-                                            </select>
                                         </div>
                                         <div class="card-body">
                                             <div id="sales-chart" class="chart-placeholder">
@@ -468,46 +431,10 @@
                                     <div class="card">
                                         <div class="card-header">
                                             <h3>Atividade Recente</h3>
-                                            <button class="btn btn-sm btn-outline">Ver Tudo</button>
                                         </div>
                                         <div class="card-body">
-                                            <div class="activity-list">
-                                                <div class="activity-item">
-                                                    <div class="activity-icon success">
-                                                        <i class="fas fa-shopping-cart"></i>
-                                                    </div>
-                                                    <div class="activity-content">
-                                                        <p>Novo pedido recebido #ORD-0012</p>
-                                                        <span class="activity-time">Há 5 minutos</span>
-                                                    </div>
-                                                </div>
-                                                <div class="activity-item">
-                                                    <div class="activity-icon primary">
-                                                        <i class="fas fa-file-invoice"></i>
-                                                    </div>
-                                                    <div class="activity-content">
-                                                        <p>Fatura #INV-0045 foi paga</p>
-                                                        <span class="activity-time">Há 1 hora</span>
-                                                    </div>
-                                                </div>
-                                                <div class="activity-item">
-                                                    <div class="activity-icon info">
-                                                        <i class="fas fa-user"></i>
-                                                    </div>
-                                                    <div class="activity-content">
-                                                        <p>Novo cliente registado: Empresa XYZ</p>
-                                                        <span class="activity-time">Há 2 horas</span>
-                                                    </div>
-                                                </div>
-                                                <div class="activity-item">
-                                                    <div class="activity-icon warning">
-                                                        <i class="fas fa-exclamation-triangle"></i>
-                                                    </div>
-                                                    <div class="activity-content">
-                                                        <p>Stock baixo para o produto "Monitor LED 24"</p>
-                                                        <span class="activity-time">Há 4 horas</span>
-                                                    </div>
-                                                </div>
+                                            <div class="activity-list" id="recent-activities">
+                                                <!-- Activities will be loaded here -->
                                             </div>
                                         </div>
                                     </div>
@@ -522,10 +449,6 @@
                                     </div>
                                     <div class="card-body">
                                         <div class="actions-grid">
-                                            <button class="action-btn" data-action="new-sale">
-                                                <i class="fas fa-plus-circle"></i>
-                                                <span>Nova Venda</span>
-                                            </button>
                                             <button class="action-btn" data-action="new-product">
                                                 <i class="fas fa-cube"></i>
                                                 <span>Add Produto</span>
@@ -537,10 +460,6 @@
                                             <button class="action-btn" data-action="new-investment">
                                                 <i class="fas fa-chart-line"></i>
                                                 <span>Investir</span>
-                                            </button>
-                                            <button class="action-btn" data-action="b2b-market">
-                                                <i class="fas fa-store"></i>
-                                                <span>Marketplace</span>
                                             </button>
                                             <button class="action-btn" data-action="reports">
                                                 <i class="fas fa-chart-bar"></i>
@@ -558,7 +477,7 @@
                         <div class="module-header">
                             <h2>Gestão de Produtos</h2>
                             <div class="header-actions">
-                                <button class="btn btn-outline">
+                                <button class="btn btn-outline" id="export-products">
                                     <i class="fas fa-download"></i>
                                     Exportar
                                 </button>
@@ -570,65 +489,233 @@
                         </div>
 
                         <div class="products-container">
-                            <!-- Products content will be loaded here -->
-                            <div class="empty-state">
-                                <i class="fas fa-cube"></i>
-                                <h3>Sem produtos</h3>
-                                <p>Comece por adicionar seu primeiro produto ao inventário.</p>
-                                <button class="btn btn-primary">Criar Primeiro Produto</button>
+                            <div class="table-container">
+                                <div class="table-toolbar">
+                                    <div class="search-box">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" id="product-search" placeholder="Pesquisar produtos...">
+                                    </div>
+                                    <div class="table-actions">
+                                        <button class="btn btn-sm btn-outline" id="refresh-products">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="table-wrapper">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>SKU</th>
+                                                <th>Nome</th>
+                                                <th>Preço</th>
+                                                <th>Stock</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="products-table-body">
+                                            <!-- Products will be loaded here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="table-footer">
+                                    <div class="table-pagination" id="products-pagination">
+                                        <!-- Pagination will be loaded here -->
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Other modules will be added similarly -->
-                    <div id="sales-module" class="module-content hidden">
-                        <!-- Sales content -->
+                    <!-- Investments Module -->
+                    <div id="investments-module" class="module-content hidden">
+                        <div class="module-header">
+                            <h2>Great Mola - Investimentos</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-primary" id="new-investment-btn">
+                                    <i class="fas fa-plus"></i>
+                                    Novo Investimento
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="investments-container">
+                            <div class="investments-stats">
+                                <div class="investment-stat-card">
+                                    <div class="stat-value" id="total-invested">0 MZN</div>
+                                    <div class="stat-label">Total Investido</div>
+                                </div>
+                                <div class="investment-stat-card">
+                                    <div class="stat-value" id="total-returns">0 MZN</div>
+                                    <div class="stat-label">Retornos</div>
+                                </div>
+                                <div class="investment-stat-card">
+                                    <div class="stat-value" id="active-investments">0</div>
+                                    <div class="stat-label">Investimentos Ativos</div>
+                                </div>
+                            </div>
+
+                            <div class="investments-list">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3>Meus Investimentos</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="investments-list-container">
+                                            <!-- Investments will be loaded here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div id="investments-module" class="module-content hidden">
-                        <!-- Investments content -->
+                    <!-- Other modules -->
+                    <div id="sales-module" class="module-content hidden">
+                        <div class="module-header">
+                            <h2>Gestão de Vendas</h2>
+                        </div>
+                        <div class="empty-state">
+                            <i class="fas fa-shopping-cart"></i>
+                            <h3>Módulo de Vendas</h3>
+                            <p>Em desenvolvimento - breve disponível</p>
+                        </div>
+                    </div>
+
+                    <div id="inventory-module" class="module-content hidden">
+                        <div class="module-header">
+                            <h2>Gestão de Inventário</h2>
+                        </div>
+                        <div class="empty-state">
+                            <i class="fas fa-warehouse"></i>
+                            <h3>Módulo de Inventário</h3>
+                            <p>Em desenvolvimento - breve disponível</p>
+                        </div>
+                    </div>
+
+                    <div id="mrp-module" class="module-content hidden">
+                        <div class="module-header">
+                            <h2>Planeamento de Produção (MRP)</h2>
+                        </div>
+                        <div class="empty-state">
+                            <i class="fas fa-industry"></i>
+                            <h3>Módulo MRP</h3>
+                            <p>Em desenvolvimento - breve disponível</p>
+                        </div>
+                    </div>
+
+                    <div id="wallet-module" class="module-content hidden">
+                        <div class="module-header">
+                            <h2>Carteira Great Mola</h2>
+                        </div>
+                        <div class="empty-state">
+                            <i class="fas fa-wallet"></i>
+                            <h3>Módulo Carteira</h3>
+                            <p>Em desenvolvimento - breve disponível</p>
+                        </div>
                     </div>
                 </div>
             </main>
         </div>
 
-        <!-- Notifications Panel -->
-        <div id="notifications-panel" class="notifications-panel hidden">
-            <div class="panel-header">
-                <h3>Notificações</h3>
-                <button class="panel-close" id="close-notifications">
-                    <i class="fas fa-times"></i>
-                </button>
+        <!-- Modals -->
+        <div id="modals-container">
+            <!-- New Product Modal -->
+            <div id="new-product-modal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Novo Produto</h3>
+                        <button class="modal-close" data-modal="new-product-modal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="new-product-form">
+                            <div class="form-group">
+                                <label for="product-sku">SKU *</label>
+                                <input type="text" id="product-sku" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-name">Nome do Produto *</label>
+                                <input type="text" id="product-name" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="product-price">Preço (MZN) *</label>
+                                    <input type="number" id="product-price" step="0.01" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="product-stock">Stock Inicial *</label>
+                                    <input type="number" id="product-stock" required>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" data-modal="new-product-modal">Cancelar</button>
+                        <button class="btn btn-primary" id="save-product">Guardar Produto</button>
+                    </div>
+                </div>
             </div>
-            <div class="panel-content">
-                <div class="notification-list">
-                    <!-- Notifications will be populated here -->
+
+            <!-- New Investment Modal -->
+            <div id="new-investment-modal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Novo Investimento</h3>
+                        <button class="modal-close" data-modal="new-investment-modal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="new-investment-form">
+                            <div class="form-group">
+                                <label for="investment-capital">Capital a Investir (MZN) *</label>
+                                <input type="number" id="investment-capital" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="investment-days">Dias Úteis *</label>
+                                <input type="number" id="investment-days" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="investment-rate">Taxa Diária (%)</label>
+                                <input type="number" id="investment-rate" step="0.001" value="0.003" readonly>
+                                <small class="form-help">Taxa fixa de 0.3% ao dia</small>
+                            </div>
+                            <div class="investment-preview">
+                                <h4>Previsão de Retorno:</h4>
+                                <div class="preview-item">
+                                    <span>Retorno Bruto:</span>
+                                    <span id="preview-gross">0 MZN</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span>Imposto (20%):</span>
+                                    <span id="preview-tax">0 MZN</span>
+                                </div>
+                                <div class="preview-item total">
+                                    <span>Retorno Líquido:</span>
+                                    <span id="preview-net">0 MZN</span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" data-modal="new-investment-modal">Cancelar</button>
+                        <button class="btn btn-primary" id="save-investment">Confirmar Investimento</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Search Panel -->
-        <div id="search-panel" class="search-panel hidden">
-            <div class="search-header">
-                <div class="search-input-container">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="global-search" placeholder="Pesquisar em todo o sistema...">
-                    <button class="search-close" id="close-search">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="search-results">
-                <!-- Search results will be populated here -->
-            </div>
-        </div>
+        <!-- Notifications -->
+        <div id="notifications-container" class="notifications-container"></div>
     </div>
 
-    <script src="src/js/auth.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="src/js/app.js"></script>
+    <script src="src/js/auth.js"></script>
     <script src="src/js/modules/dashboard.js"></script>
     <script src="src/js/modules/products.js"></script>
+    <script src="src/js/modules/investments.js"></script>
     <script src="src/js/api/client.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>
