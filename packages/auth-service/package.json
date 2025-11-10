@@ -1,0 +1,32 @@
+{
+  "name": "@great-nexus/auth-service",
+  "version": "1.0.0",
+  "description": "Authentication and Authorization Service",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "nodemon src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "zod": "^3.22.4",
+    "pg": "^8.11.3",
+    "redis": "^4.6.7",
+    "helmet": "^7.0.0",
+    "express-rate-limit": "^6.8.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/bcryptjs": "^2.4.2",
+    "@types/pg": "^8.10.2",
+    "@types/cors": "^2.8.13",
+    "typescript": "^5.0.0",
+    "nodemon": "^2.0.22",
+    "ts-node": "^10.9.0"
+  }
+}
