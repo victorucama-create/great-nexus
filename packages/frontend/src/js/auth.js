@@ -1,7 +1,7 @@
 // Authentication handling
 class AuthManager {
     constructor() {
-        this.apiBaseUrl = 'http://localhost:3001/api/v1';
+        this.apiClient = new ApiClient();
         this.setupAuthForms();
     }
 
@@ -22,27 +22,23 @@ class AuthManager {
     async handleLogin() {
         const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-password').value;
-        const rememberMe = document.getElementById('remember-me').checked;
 
         try {
-            const response = await fetch(`${this.apiBaseUrl}/auth/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password })
+            const response = await this.apiClient.post('/auth/login', {
+                email,
+                password
             });
 
-            const data = await response.json();
-
-            if (response.ok) {
-                this.storeAuthData(data);
+            if (response.success) {
+                window.greatNexusApp.storeAuthData(response.data);
                 window.greatNexusApp.showMainApp();
+                window.greatNexusApp.showNotification('Login realizado com sucesso!', 'success');
             } else {
-                this.showError(data.error || 'Erro no login');
+                window.greatNexusApp.showNotification(response.error || 'Erro no login', 'error');
             }
         } catch (error) {
-            this.showError('Erro de conexão. Tente novamente.');
+            console.error('Login error:', error);
+            window.greatNexusApp.showNotification('Erro de conexão. Tente novamente.', 'error');
         }
     }
 
@@ -58,83 +54,29 @@ class AuthManager {
 
         // Basic validation
         if (formData.password !== document.getElementById('register-confirm-password').value) {
-            this.showError('As passwords não coincidem');
+            window.greatNexusApp.showNotification('As passwords não coincidem', 'error');
             return;
         }
 
         if (!document.getElementById('accept-terms').checked) {
-            this.showError('Deve aceitar os termos e condições');
+            window.greatNexusApp.showNotification('Deve aceitar os termos e condições', 'error');
             return;
         }
 
         try {
-            const response = await fetch(`${this.apiBaseUrl}/auth/register`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            });
+            const response = await this.apiClient.post('/auth/register', formData);
 
-            const data = await response.json();
-
-            if (response.ok) {
-                this.storeAuthData(data);
+            if (response.success) {
+                window.greatNexusApp.storeAuthData(response.data);
                 window.greatNexusApp.showMainApp();
+                window.greatNexusApp.showNotification('Conta criada com sucesso!', 'success');
             } else {
-                this.showError(data.error || 'Erro no registo');
+                window.greatNexusApp.showNotification(response.error || 'Erro no registo', 'error');
             }
         } catch (error) {
-            this.showError('Erro de conexão. Tente novamente.');
+            console.error('Registration error:', error);
+            window.greatNexusApp.showNotification('Erro de conexão. Tente novamente.', 'error');
         }
-    }
-
-    storeAuthData(data) {
-        localStorage.setItem('auth_token', data.accessToken);
-        localStorage.setItem('refresh_token', data.refreshToken);
-        localStorage.setItem('user_data', JSON.stringify(data.user));
-        localStorage.setItem('tenant_data', JSON.stringify(data.tenant));
-    }
-
-    showError(message) {
-        // Simple error display - you might want to use a more sophisticated notification system
-        alert(`Erro: ${message}`);
-    }
-
-    async refreshToken() {
-        const refreshToken = localStorage.getItem('refresh_token');
-        
-        if (!refreshToken) {
-            this.logout();
-            return;
-        }
-
-        try {
-            const response = await fetch(`${this.apiBaseUrl}/auth/refresh`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ refreshToken })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                localStorage.setItem('auth_token', data.accessToken);
-                return data.accessToken;
-            } else {
-                this.logout();
-                return null;
-            }
-        } catch (error) {
-            this.logout();
-            return null;
-        }
-    }
-
-    logout() {
-        localStorage.clear();
-        window.greatNexusApp.showLogin();
     }
 }
 
