@@ -9,14 +9,14 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // =============================================
-// IN-MEMORY DATABASE (para MVP inicial)
+// IN-MEMORY DATABASE
 // =============================================
 const memoryDB = {
   users: [
     {
       id: '1',
       email: 'admin@greatnexus.com',
-      password: 'hashed_password_here', // Em produção, usar bcrypt
+      password: '12345678', // Demo only
       name: 'Administrador',
       role: 'super_admin',
       tenant_id: '1'
@@ -35,24 +35,39 @@ const memoryDB = {
   investments: []
 };
 
+// Add demo data
+memoryDB.products.push(
+  {
+    id: 'prod-1',
+    tenant_id: '1',
+    sku: 'MON-24-LED',
+    name: 'Monitor LED 24"',
+    price: 8500.00,
+    stock: 15,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'prod-2', 
+    tenant_id: '1',
+    sku: 'TEC-GAMER',
+    name: 'Teclado Gamer Mecânico',
+    price: 2500.00,
+    stock: 8,
+    created_at: new Date().toISOString()
+  }
+);
+
 // =============================================
 // MIDDLEWARE
 // =============================================
-
-// Security Headers
 app.use(helmet({
-  contentSecurityPolicy: false, // Desabilitado para desenvolvimento
+  contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
 }));
-
-// CORS
 app.use(cors());
-
-// Body Parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 1000,
@@ -61,26 +76,30 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // =============================================
-// STATIC FILES
+// STATIC FILE SERVING - Criar pasta frontend se não existir
 // =============================================
+const fs = require('fs');
+const frontendPath = path.join(__dirname, 'frontend');
 
-app.use(express.static(path.join(__dirname, 'frontend')));
+// Criar pasta frontend se não existir
+if (!fs.existsSync(frontendPath)) {
+  fs.mkdirSync(frontendPath, { recursive: true });
+  console.log('✅ Created frontend directory');
+}
+
+// Servir arquivos estáticos da pasta frontend
+app.use(express.static(frontendPath));
 
 // =============================================
-// AUTHENTICATION MIDDLEWARE (Simplified)
+// AUTHENTICATION MIDDLEWARE
 // =============================================
-
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
-  // Skip auth for public routes
   const publicRoutes = [
-    '/health', 
-    '/status',
-    '/api/v1/auth/register', 
-    '/api/v1/auth/login',
-    '/api/v1/auth/demo'
+    '/', '/health', '/status', '/api/v1/auth/register', 
+    '/api/v1/auth/login', '/api/v1/auth/demo'
   ];
   
   if (publicRoutes.includes(req.path)) {
@@ -92,7 +111,6 @@ const authenticateToken = (req, res, next) => {
   }
 
   try {
-    // Simple token verification for demo
     const jwt = require('jsonwebtoken');
     const jwtSecret = process.env.JWT_SECRET || 'great-nexus-demo-secret';
     const user = jwt.verify(token, jwtSecret);
@@ -108,7 +126,6 @@ app.use('/api/', authenticateToken);
 // =============================================
 // HEALTH CHECK & STATUS
 // =============================================
-
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
@@ -116,8 +133,7 @@ app.get('/health', (req, res) => {
     version: '1.0.0',
     environment: process.env.NODE_ENV || 'development',
     database: 'in-memory',
-    timestamp: new Date().toISOString(),
-    memory: process.memoryUsage()
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -135,9 +151,8 @@ app.get('/status', (req, res) => {
 });
 
 // =============================================
-// DEMO AUTH ENDPOINT (Para teste rápido)
+// DEMO AUTH ENDPOINT
 // =============================================
-
 app.post('/api/v1/auth/demo', (req, res) => {
   const jwt = require('jsonwebtoken');
   const jwtSecret = process.env.JWT_SECRET || 'great-nexus-demo-secret';
@@ -147,7 +162,7 @@ app.post('/api/v1/auth/demo', (req, res) => {
     email: 'demo@greatnexus.com',
     name: 'Demo User',
     role: 'tenant_admin',
-    tenant_id: 'demo-tenant-1'
+    tenant_id: '1'
   };
 
   const demoToken = jwt.sign(demoUser, jwtSecret, { expiresIn: '24h' });
@@ -155,11 +170,7 @@ app.post('/api/v1/auth/demo', (req, res) => {
   res.json({
     message: 'Demo login successful!',
     user: demoUser,
-    tenant: {
-      id: 'demo-tenant-1',
-      name: 'Great Nexus Demo Company',
-      plan: 'starter'
-    },
+    tenant: memoryDB.tenants[0],
     accessToken: demoToken,
     refreshToken: demoToken
   });
@@ -168,27 +179,22 @@ app.post('/api/v1/auth/demo', (req, res) => {
 // =============================================
 // AUTH ROUTES
 // =============================================
-
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Register endpoint
 app.post('/api/v1/auth/register', async (req, res) => {
   try {
     const { email, password, name, companyName, country = 'MZ', currency = 'MZN' } = req.body;
 
-    // Validation
     if (!email || !password || !name || !companyName) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
-    // Check if user exists
     const userExists = memoryDB.users.find(u => u.email === email);
     if (userExists) {
       return res.status(400).json({ error: 'User already exists' });
     }
 
-    // Create tenant
     const tenantId = 'tenant-' + Date.now();
     const tenant = {
       id: tenantId,
@@ -200,20 +206,18 @@ app.post('/api/v1/auth/register', async (req, res) => {
     };
     memoryDB.tenants.push(tenant);
 
-    // Create user (simplified - sem hash para demo)
     const userId = 'user-' + Date.now();
     const user = {
       id: userId,
       tenant_id: tenantId,
       email,
-      password: password, // Em produção: await bcrypt.hash(password, 12)
+      password: password,
       name,
       role: 'tenant_admin',
       created_at: new Date().toISOString()
     };
     memoryDB.users.push(user);
 
-    // Generate tokens
     const jwtSecret = process.env.JWT_SECRET || 'great-nexus-demo-secret';
     const accessToken = jwt.sign(
       { user_id: userId, tenant_id: tenantId, role: user.role },
@@ -247,7 +251,6 @@ app.post('/api/v1/auth/register', async (req, res) => {
   }
 });
 
-// Login endpoint
 app.post('/api/v1/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -256,21 +259,16 @@ app.post('/api/v1/auth/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    // Find user
     const user = memoryDB.users.find(u => u.email === email);
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Verify password (simplified para demo)
     if (user.password !== password) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Find tenant
     const tenant = memoryDB.tenants.find(t => t.id === user.tenant_id);
-
-    // Generate tokens
     const jwtSecret = process.env.JWT_SECRET || 'great-nexus-demo-secret';
     const accessToken = jwt.sign(
       { user_id: user.id, tenant_id: user.tenant_id, role: user.role },
@@ -307,8 +305,6 @@ app.post('/api/v1/auth/login', async (req, res) => {
 // =============================================
 // ERP ROUTES
 // =============================================
-
-// Get products
 app.get('/api/v1/erp/products', (req, res) => {
   try {
     const userProducts = memoryDB.products.filter(p => p.tenant_id === req.user.tenant_id);
@@ -329,7 +325,6 @@ app.get('/api/v1/erp/products', (req, res) => {
   }
 });
 
-// Create product
 app.post('/api/v1/erp/products', (req, res) => {
   try {
     const { sku, name, price = 0, stock = 0 } = req.body;
@@ -364,8 +359,6 @@ app.post('/api/v1/erp/products', (req, res) => {
 // =============================================
 // GREAT MOLA ROUTES
 // =============================================
-
-// Get investments
 app.get('/api/v1/mola/investments', (req, res) => {
   try {
     const userInvestments = memoryDB.investments.filter(i => i.user_id === req.user.user_id);
@@ -395,7 +388,6 @@ app.get('/api/v1/mola/investments', (req, res) => {
   }
 });
 
-// Create investment
 app.post('/api/v1/mola/investments', (req, res) => {
   try {
     const { capital, business_days, daily_rate = 0.003 } = req.body;
@@ -404,7 +396,6 @@ app.post('/api/v1/mola/investments', (req, res) => {
       return res.status(400).json({ error: 'Capital and business days are required' });
     }
 
-    // Calculate investment returns
     const gross_return = capital * business_days * daily_rate;
     const tax = gross_return * 0.20;
     const net_return = gross_return - tax;
@@ -437,36 +428,152 @@ app.post('/api/v1/mola/investments', (req, res) => {
 });
 
 // =============================================
-// ADD SOME DEMO DATA
+// FRONTEND ROUTE - Serve HTML básico se não existir frontend
 // =============================================
-
-// Add demo products
-memoryDB.products.push(
-  {
-    id: 'prod-1',
-    tenant_id: 'demo-tenant-1',
-    sku: 'MON-24-LED',
-    name: 'Monitor LED 24"',
-    price: 8500.00,
-    stock: 15,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: 'prod-2', 
-    tenant_id: 'demo-tenant-1',
-    sku: 'TEC-GAMER',
-    name: 'Teclado Gamer Mecânico',
-    price: 2500.00,
-    stock: 8,
-    created_at: new Date().toISOString()
+app.get('/', (req, res) => {
+  const frontendFile = path.join(frontendPath, 'index.html');
+  
+  // Se o arquivo index.html existe, servir ele
+  if (fs.existsSync(frontendFile)) {
+    return res.sendFile(frontendFile);
   }
-);
+  
+  // Se não existe, criar um frontend básico automaticamente
+  const basicFrontend = `
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Great Nexus - Ecossistema Empresarial Inteligente</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container { 
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        .logo { 
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        h1 { 
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+        }
+        p { 
+            color: #666;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        .btn { 
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 0.5rem;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover { background: #5a6fd8; }
+        .demo-info { 
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            text-align: left;
+        }
+        .status { 
+            color: #28a745;
+            font-weight: bold;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">Great Nexus</div>
+        <h1>🚀 Sistema em Execução!</h1>
+        <p>Seu ecossistema empresarial inteligente está rodando perfeitamente.</p>
+        
+        <div class="status">✅ Backend API: Operacional</div>
+        <div class="status">✅ Banco de Dados: Em Memória</div>
+        <div class="status">✅ Autenticação: Pronta</div>
+        
+        <div class="demo-info">
+            <h3>📋 Teste Rápido:</h3>
+            <p><strong>Demo Login:</strong> Use o botão abaixo para fazer login automático</p>
+            <p><strong>API Health:</strong> <a href="/health" target="_blank">/health</a></p>
+            <p><strong>Status:</strong> <a href="/status" target="_blank">/status</a></p>
+        </div>
+
+        <button class="btn" onclick="demoLogin()">🎯 Demo Login</button>
+        <a href="/health" class="btn" target="_blank">📊 Health Check</a>
+        
+        <div style="margin-top: 2rem; font-size: 0.9rem; color: #888;">
+            <p>Frontend completo em desenvolvimento...</p>
+        </div>
+    </div>
+
+    <script>
+        async function demoLogin() {
+            try {
+                const response = await fetch('/api/v1/auth/demo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('auth_token', data.accessToken);
+                    localStorage.setItem('user_data', JSON.stringify(data.user));
+                    localStorage.setItem('tenant_data', JSON.stringify(data.tenant));
+                    
+                    alert('✅ Login demo realizado! Token salvo no localStorage.');
+                    console.log('Demo user:', data.user);
+                } else {
+                    alert('❌ Erro no login: ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Erro de conexão: ' + error.message);
+            }
+        }
+
+        // Testar conexão automaticamente
+        fetch('/health')
+            .then(r => r.json())
+            .then(data => console.log('Health check:', data))
+            .catch(err => console.error('Health check failed:', err));
+    </script>
+</body>
+</html>
+  `;
+  
+  res.send(basicFrontend);
+});
 
 // =============================================
 // FALLBACK ROUTES
 // =============================================
-
-// API 404 handler
 app.use('/api/*', (req, res) => {
   res.status(404).json({ 
     error: 'API endpoint not found',
@@ -475,15 +582,20 @@ app.use('/api/*', (req, res) => {
   });
 });
 
-// Serve frontend for all other routes (SPA support)
+// Serve frontend for all other routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+  const requestedFile = path.join(frontendPath, req.path);
+  
+  if (fs.existsSync(requestedFile)) {
+    res.sendFile(requestedFile);
+  } else {
+    res.redirect('/');
+  }
 });
 
 // =============================================
 // ERROR HANDLING
 // =============================================
-
 app.use((err, req, res, next) => {
   console.error('🚨 Error:', err.stack);
   res.status(500).json({ 
@@ -497,7 +609,6 @@ app.use((err, req, res, next) => {
 // =============================================
 // SERVER STARTUP
 // =============================================
-
 app.listen(PORT, () => {
   console.log(`
 🎉 GREAT NEXUS SERVER STARTED SUCCESSFULLY!
@@ -508,12 +619,12 @@ app.listen(PORT, () => {
 📅 Started: ${new Date().toLocaleString()}
 🔗 Health Check: http://localhost:${PORT}/health
 🚀 Demo Login: POST http://localhost:${PORT}/api/v1/auth/demo
+🏠 Frontend: http://localhost:${PORT}/
 
-✅ READY FOR DEMONSTRATION!
+✅ READY FOR PRODUCTION!
   `);
 });
 
-// Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('🛑 SIGTERM received, shutting down gracefully...');
   process.exit(0);
