@@ -1,0 +1,48 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: greatnexus
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  auth-service:
+    build: ./packages/auth-service
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/greatnexus
+      - REDIS_URL=redis://redis:6379
+      - JWT_PRIVATE_KEY=your_private_key_here
+      - JWT_PUBLIC_KEY=your_public_key_here
+    depends_on:
+      - postgres
+      - redis
+
+  erp-service:
+    build: ./packages/erp-service
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/greatnexus
+      - REDIS_URL=redis://redis:6379
+      - AUTH_SERVICE_URL=http://auth-service:3001
+    depends_on:
+      - postgres
+      - redis
+      - auth-service
+
+volumes:
+  postgres_data:
