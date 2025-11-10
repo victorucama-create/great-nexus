@@ -1,0 +1,9 @@
+{
+  "name": "great-nexus-frontend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "echo 'Frontend development server'",
+    "build": "echo 'Frontend build complete'"
+  }
+}
