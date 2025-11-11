@@ -29,6 +29,7 @@ const initDB = async () => {
         subscription_id TEXT,
         billing_cycle TEXT DEFAULT 'monthly',
         next_billing_date TIMESTAMPTZ,
+        settings JSONB DEFAULT '{}',
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       )
@@ -47,6 +48,7 @@ const initDB = async () => {
         avatar_url TEXT,
         last_login TIMESTAMPTZ,
         is_active BOOLEAN DEFAULT true,
+        preferences JSONB DEFAULT '{}',
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW(),
         UNIQUE(tenant_id, email)
@@ -69,6 +71,7 @@ const initDB = async () => {
         website TEXT,
         logo_url TEXT,
         is_default BOOLEAN DEFAULT false,
+        settings JSONB DEFAULT '{}',
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       )
@@ -91,6 +94,8 @@ const initDB = async () => {
         status TEXT DEFAULT 'active',
         credit_limit NUMERIC(15,2) DEFAULT 0,
         current_balance NUMERIC(15,2) DEFAULT 0,
+        notes TEXT,
+        metadata JSONB DEFAULT '{}',
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       )
@@ -114,6 +119,7 @@ const initDB = async () => {
         unit TEXT DEFAULT 'unidade',
         is_active BOOLEAN DEFAULT true,
         image_url TEXT,
+        metadata JSONB DEFAULT '{}',
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW(),
         UNIQUE(tenant_id, sku)
@@ -140,6 +146,7 @@ const initDB = async () => {
         terms TEXT,
         created_by UUID NOT NULL REFERENCES users(id),
         paid_at TIMESTAMPTZ,
+        metadata JSONB DEFAULT '{}',
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       )
@@ -157,6 +164,7 @@ const initDB = async () => {
         discount NUMERIC(5,2) DEFAULT 0,
         tax_rate NUMERIC(5,2) DEFAULT 0,
         total_amount NUMERIC(15,2) NOT NULL,
+        metadata JSONB DEFAULT '{}',
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `);
@@ -178,6 +186,7 @@ const initDB = async () => {
         reference TEXT,
         notes TEXT,
         created_by UUID NOT NULL REFERENCES users(id),
+        metadata JSONB DEFAULT '{}',
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       )
@@ -198,7 +207,7 @@ const initDB = async () => {
         current_period_end TIMESTAMPTZ NOT NULL,
         cancel_at_period_end BOOLEAN DEFAULT false,
         canceled_at TIMESTAMPTZ,
-        metadata JSONB,
+        metadata JSONB DEFAULT '{}',
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       )
@@ -218,6 +227,7 @@ const initDB = async () => {
         status TEXT NOT NULL DEFAULT 'pending',
         due_date TIMESTAMPTZ,
         paid_at TIMESTAMPTZ,
+        metadata JSONB DEFAULT '{}',
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `);
@@ -238,6 +248,7 @@ const initDB = async () => {
         receipt_url TEXT,
         status TEXT DEFAULT 'completed',
         created_by UUID NOT NULL REFERENCES users(id),
+        metadata JSONB DEFAULT '{}',
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       )
@@ -256,6 +267,7 @@ const initDB = async () => {
         currency TEXT NOT NULL DEFAULT 'MZN',
         balance NUMERIC(15,2) DEFAULT 0,
         is_active BOOLEAN DEFAULT true,
+        metadata JSONB DEFAULT '{}',
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       )
@@ -276,7 +288,7 @@ const initDB = async () => {
         transaction_date DATE NOT NULL,
         reference TEXT,
         status TEXT DEFAULT 'completed',
-        metadata JSONB,
+        metadata JSONB DEFAULT '{}',
         created_by UUID NOT NULL REFERENCES users(id),
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -317,10 +329,12 @@ const initDB = async () => {
         tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
         name TEXT NOT NULL,
         type TEXT NOT NULL,
-        parameters JSONB,
+        parameters JSONB DEFAULT '{}',
         file_url TEXT,
         status TEXT DEFAULT 'pending',
+        generated_at TIMESTAMPTZ,
         created_by UUID NOT NULL REFERENCES users(id),
+        metadata JSONB DEFAULT '{}',
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       )
@@ -339,6 +353,7 @@ const initDB = async () => {
         new_values JSONB,
         ip_address TEXT,
         user_agent TEXT,
+        metadata JSONB DEFAULT '{}',
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `);
@@ -357,6 +372,225 @@ const initDB = async () => {
       )
     `);
 
+    // =============================================
+    // NOVAS TABELAS PARA AUTOMAÇÃO E INTEGRAÇÕES
+    // =============================================
+
+    // Create automation_rules table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS automation_rules (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        description TEXT,
+        trigger_type TEXT NOT NULL,
+        trigger_config JSONB DEFAULT '{}',
+        action_type TEXT NOT NULL,
+        action_config JSONB DEFAULT '{}',
+        conditions JSONB DEFAULT '[]',
+        is_active BOOLEAN DEFAULT true,
+        last_triggered_at TIMESTAMPTZ,
+        created_by UUID NOT NULL REFERENCES users(id),
+        metadata JSONB DEFAULT '{}',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+
+    // Create email_templates table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS email_templates (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        body TEXT NOT NULL,
+        variables JSONB DEFAULT '[]',
+        is_active BOOLEAN DEFAULT true,
+        created_by UUID NOT NULL REFERENCES users(id),
+        metadata JSONB DEFAULT '{}',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+
+    // Create scheduled_tasks table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS scheduled_tasks (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        description TEXT,
+        task_type TEXT NOT NULL,
+        schedule_config JSONB DEFAULT '{}',
+        last_run_at TIMESTAMPTZ,
+        next_run_at TIMESTAMPTZ,
+        status TEXT DEFAULT 'active',
+        created_by UUID NOT NULL REFERENCES users(id),
+        metadata JSONB DEFAULT '{}',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+
+    // Create integrations table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS integrations (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        type TEXT NOT NULL,
+        provider TEXT NOT NULL,
+        config JSONB DEFAULT '{}',
+        status TEXT DEFAULT 'active',
+        last_sync_at TIMESTAMPTZ,
+        created_by UUID NOT NULL REFERENCES users(id),
+        metadata JSONB DEFAULT '{}',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+
+    // Create webhooks table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS webhooks (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        url TEXT NOT NULL,
+        events JSONB DEFAULT '[]',
+        secret TEXT,
+        is_active BOOLEAN DEFAULT true,
+        last_triggered_at TIMESTAMPTZ,
+        created_by UUID NOT NULL REFERENCES users(id),
+        metadata JSONB DEFAULT '{}',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+
+    // Create notifications table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        type TEXT NOT NULL,
+        is_read BOOLEAN DEFAULT false,
+        action_url TEXT,
+        metadata JSONB DEFAULT '{}',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        read_at TIMESTAMPTZ
+      )
+    `);
+
+    // Create data_exports table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS data_exports (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        format TEXT NOT NULL,
+        filters JSONB DEFAULT '{}',
+        file_url TEXT,
+        status TEXT DEFAULT 'processing',
+        created_by UUID NOT NULL REFERENCES users(id),
+        metadata JSONB DEFAULT '{}',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        completed_at TIMESTAMPTZ
+      )
+    `);
+
+    // Create api_keys table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS api_keys (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        key_hash TEXT NOT NULL,
+        permissions JSONB DEFAULT '[]',
+        expires_at TIMESTAMPTZ,
+        last_used_at TIMESTAMPTZ,
+        is_active BOOLEAN DEFAULT true,
+        created_by UUID NOT NULL REFERENCES users(id),
+        metadata JSONB DEFAULT '{}',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+
+    // Create workflow_definitions table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS workflow_definitions (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        description TEXT,
+        version INTEGER DEFAULT 1,
+        definition JSONB NOT NULL,
+        is_active BOOLEAN DEFAULT true,
+        created_by UUID NOT NULL REFERENCES users(id),
+        metadata JSONB DEFAULT '{}',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+
+    // Create workflow_instances table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS workflow_instances (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        workflow_definition_id UUID NOT NULL REFERENCES workflow_definitions(id) ON DELETE CASCADE,
+        status TEXT NOT NULL DEFAULT 'running',
+        current_step TEXT,
+        context JSONB DEFAULT '{}',
+        created_by UUID NOT NULL REFERENCES users(id),
+        metadata JSONB DEFAULT '{}',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        completed_at TIMESTAMPTZ
+      )
+    `);
+
+    // Create workflow_execution_logs table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS workflow_execution_logs (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        workflow_instance_id UUID NOT NULL REFERENCES workflow_instances(id) ON DELETE CASCADE,
+        step_name TEXT NOT NULL,
+        status TEXT NOT NULL,
+        input_data JSONB,
+        output_data JSONB,
+        error_message TEXT,
+        duration_ms INTEGER,
+        executed_at TIMESTAMPTZ DEFAULT NOW(),
+        metadata JSONB DEFAULT '{}'
+      )
+    `);
+
+    // Create data_sync_logs table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS data_sync_logs (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        integration_id UUID NOT NULL REFERENCES integrations(id) ON DELETE CASCADE,
+        sync_type TEXT NOT NULL,
+        records_processed INTEGER DEFAULT 0,
+        records_created INTEGER DEFAULT 0,
+        records_updated INTEGER DEFAULT 0,
+        records_failed INTEGER DEFAULT 0,
+        status TEXT NOT NULL,
+        started_at TIMESTAMPTZ DEFAULT NOW(),
+        completed_at TIMESTAMPTZ,
+        error_message TEXT,
+        metadata JSONB DEFAULT '{}'
+      )
+    `);
+
     console.log('✅ Database schema initialized successfully');
 
     // Insert default payment methods
@@ -367,7 +601,9 @@ const initDB = async () => {
       ('00000000-0000-0000-0000-000000000000', 'MB Way', 'digital_wallet'),
       ('00000000-0000-0000-0000-000000000000', 'Cartão de Crédito', 'credit_card'),
       ('00000000-0000-0000-0000-000000000000', 'Cartão de Débito', 'debit_card'),
-      ('00000000-0000-0000-0000-000000000000', 'Cheque', 'check')
+      ('00000000-0000-0000-0000-000000000000', 'Cheque', 'check'),
+      ('00000000-0000-0000-0000-000000000000', 'PayPal', 'digital_wallet'),
+      ('00000000-0000-0000-0000-000000000000', 'Stripe', 'digital_wallet')
       ON CONFLICT DO NOTHING
     `);
 
@@ -376,7 +612,113 @@ const initDB = async () => {
       INSERT INTO tax_rates (tenant_id, name, rate, description) VALUES 
       ('00000000-0000-0000-0000-000000000000', 'IVA 17%', 17.00, 'IVA padrão em Moçambique'),
       ('00000000-0000-0000-0000-000000000000', 'Isento', 0.00, 'Produtos isentos de IVA'),
-      ('00000000-0000-0000-0000-000000000000', 'Reduzido 7%', 7.00, 'Taxa reduzida')
+      ('00000000-0000-0000-0000-000000000000', 'Reduzido 7%', 7.00, 'Taxa reduzida'),
+      ('00000000-0000-0000-0000-000000000000', 'IVA 16%', 16.00, 'IVA para alguns produtos')
+      ON CONFLICT DO NOTHING
+    `);
+
+    // Insert default email templates
+    await client.query(`
+      INSERT INTO email_templates (tenant_id, name, subject, body, variables, created_by) VALUES 
+      (
+        '00000000-0000-0000-0000-000000000000',
+        'Fatura Criada',
+        'Nova Fatura {{invoice_number}}',
+        'Prezado {{customer_name}},\n\nA sua fatura {{invoice_number}} no valor de {{amount}} foi criada.\n\nData de vencimento: {{due_date}}\n\nAtenciosamente,\n{{company_name}}',
+        '["invoice_number", "customer_name", "amount", "due_date", "company_name"]',
+        '00000000-0000-0000-0000-000000000000'
+      ),
+      (
+        '00000000-0000-0000-0000-000000000000',
+        'Lembrete de Pagamento',
+        'Lembrete: Fatura {{invoice_number}} Vencendo',
+        'Prezado {{customer_name}},\n\nLembramos que a fatura {{invoice_number}} no valor de {{amount}} vence em {{due_date}}.\n\nAtenciosamente,\n{{company_name}}',
+        '["invoice_number", "customer_name", "amount", "due_date", "company_name"]',
+        '00000000-0000-0000-0000-000000000000'
+      ),
+      (
+        '00000000-0000-0000-0000-000000000000',
+        'Pagamento Recebido',
+        'Pagamento Confirmado - Fatura {{invoice_number}}',
+        'Prezado {{customer_name}},\n\nO pagamento da fatura {{invoice_number}} no valor de {{amount}} foi confirmado.\n\nObrigado!\n{{company_name}}',
+        '["invoice_number", "customer_name", "amount", "company_name"]',
+        '00000000-0000-0000-0000-000000000000'
+      )
+      ON CONFLICT DO NOTHING
+    `);
+
+    // Insert default automation rules
+    await client.query(`
+      INSERT INTO automation_rules (tenant_id, name, description, trigger_type, trigger_config, action_type, action_config, conditions, created_by) VALUES 
+      (
+        '00000000-0000-0000-0000-000000000000',
+        'Notificar Fatura Criada',
+        'Envia email automaticamente quando uma fatura é criada',
+        'invoice.created',
+        '{"event": "invoice.created"}',
+        'send_email',
+        '{"template": "Fatura Criada", "to": "{{customer_email}}"}',
+        '[{"field": "invoice.status", "operator": "equals", "value": "draft"}]',
+        '00000000-0000-0000-0000-000000000000'
+      ),
+      (
+        '00000000-0000-0000-0000-000000000000',
+        'Lembrete Vencimento',
+        'Envia lembrete 3 dias antes do vencimento',
+        'scheduled',
+        '{"schedule": "0 9 * * *", "condition": "days_before_due <= 3"}',
+        'send_email',
+        '{"template": "Lembrete de Pagamento", "to": "{{customer_email}}"}',
+        '[{"field": "invoice.status", "operator": "equals", "value": "pending"}]',
+        '00000000-0000-0000-0000-000000000000'
+      ),
+      (
+        '00000000-0000-0000-0000-000000000000',
+        'Confirmar Pagamento',
+        'Envia confirmação quando pagamento é recebido',
+        'payment.received',
+        '{"event": "payment.received"}',
+        'send_email',
+        '{"template": "Pagamento Recebido", "to": "{{customer_email}}"}',
+        '[]',
+        '00000000-0000-0000-0000-000000000000'
+      )
+      ON CONFLICT DO NOTHING
+    `);
+
+    // Insert default system settings
+    await client.query(`
+      INSERT INTO system_settings (tenant_id, setting_key, setting_value, description) VALUES 
+      (
+        '00000000-0000-0000-0000-000000000000',
+        'company.default_currency',
+        '"MZN"',
+        'Moeda padrão do sistema'
+      ),
+      (
+        '00000000-0000-0000-0000-000000000000',
+        'invoice.default_terms',
+        '"Pagamento devido em 30 dias. Multa de 2% ao mês por atraso."',
+        'Termos padrão das faturas'
+      ),
+      (
+        '00000000-0000-0000-0000-000000000000',
+        'notification.email_enabled',
+        'true',
+        'Habilitar notificações por email'
+      ),
+      (
+        '00000000-0000-0000-0000-000000000000',
+        'automation.enabled',
+        'true',
+        'Habilitar automações'
+      ),
+      (
+        '00000000-0000-0000-0000-000000000000',
+        'backup.auto_enabled',
+        'true',
+        'Habilitar backup automático'
+      )
       ON CONFLICT DO NOTHING
     `);
 
