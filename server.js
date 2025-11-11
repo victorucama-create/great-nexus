@@ -1,6 +1,6 @@
 /**
  * GREAT NEXUS – Ecossistema Empresarial Inteligente
- * Versão com PostgreSQL Database
+ * Versão com PostgreSQL Database Integrado
  */
 
 require("dotenv").config();
@@ -13,11 +13,26 @@ const bcrypt = require("bcryptjs");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const db = require("./database"); // Importar database
+
+// Importar sua configuração do database
+const { pool, initDB, testConnection } = require("./backend/config/database");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || "greatnexus-secret-key";
+
+// =============================================
+// INICIALIZAÇÃO DO BANCO DE DADOS
+// =============================================
+const initializeDatabase = async () => {
+  try {
+    await testConnection();
+    await initDB();
+    console.log('🗄️  Banco de dados inicializado com sucesso');
+  } catch (error) {
+    console.error('❌ Erro na inicialização do banco:', error);
+  }
+};
 
 // =============================================
 // MIDDLEWARE
@@ -61,7 +76,11 @@ const upload = multer({ storage });
 // AUTENTICAÇÃO
 // =============================================
 function generateToken(user) {
-  return jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: "8h" });
+  return jwt.sign({ 
+    id: user.id, 
+    role: user.role,
+    tenant_id: user.tenant_id 
+  }, JWT_SECRET, { expiresIn: "8h" });
 }
 
 function verifyToken(req, res, next) {
@@ -82,15 +101,15 @@ function verifyToken(req, res, next) {
 // ROTAS PÚBLICAS
 // =============================================
 
-// Health Check
+// Health Check com verificação do banco
 app.get("/health", async (req, res) => {
   try {
-    // Testar conexão com o banco
-    await db.query('SELECT 1');
+    const dbStatus = await testConnection();
+    
     res.json({
       status: "OK",
       service: "Great Nexus Backend",
-      database: "Connected",
+      database: dbStatus ? "Connected" : "Disconnected",
       time: new Date().toISOString(),
       environment: process.env.NODE_ENV || "development"
     });
@@ -98,22 +117,392 @@ app.get("/health", async (req, res) => {
     res.status(500).json({
       status: "ERROR",
       service: "Great Nexus Backend", 
-      database: "Disconnected",
+      database: "Connection Failed",
       error: error.message
     });
   }
 });
 
-// Página de Login (mantida igual)
+// Página de Login
 app.get("/login", (req, res) => {
-  // ... (código da página de login anterior)
-  res.send(`...`); // Manter o HTML completo da página login
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Great Nexus - Login</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                height: 100vh; 
+                display: flex; 
+                justify-content: center; 
+                align-items: center; 
+                margin: 0; 
+            }
+            .login-container { 
+                background: white; 
+                padding: 40px; 
+                border-radius: 15px; 
+                box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+                width: 100%;
+                max-width: 400px;
+            }
+            .logo { 
+                text-align: center; 
+                margin-bottom: 30px; 
+            }
+            .logo h1 { 
+                color: #333; 
+                margin-bottom: 5px; 
+                font-size: 24px;
+            }
+            .logo p {
+                color: #666;
+                margin: 0;
+            }
+            .form-group { 
+                margin-bottom: 20px; 
+            }
+            .form-group label { 
+                display: block; 
+                margin-bottom: 5px; 
+                color: #333; 
+                font-weight: bold; 
+            }
+            .form-group input { 
+                width: 100%; 
+                padding: 12px; 
+                border: 2px solid #ddd; 
+                border-radius: 8px; 
+                font-size: 16px; 
+            }
+            .form-group input:focus { 
+                outline: none; 
+                border-color: #667eea; 
+            }
+            .btn-login { 
+                width: 100%; 
+                padding: 12px; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                color: white; 
+                border: none; 
+                border-radius: 8px; 
+                font-size: 16px; 
+                cursor: pointer; 
+                transition: opacity 0.3s;
+            }
+            .btn-login:hover { 
+                opacity: 0.9; 
+            }
+            .demo-accounts { 
+                margin-top: 20px; 
+                padding: 15px; 
+                background: #f8f9fa; 
+                border-radius: 8px; 
+                font-size: 12px; 
+            }
+            .demo-accounts h3 {
+                margin: 0 0 10px 0;
+                color: #333;
+            }
+            .account {
+                margin-bottom: 5px;
+                padding: 5px;
+                background: white;
+                border-radius: 4px;
+            }
+            .message { 
+                margin-top: 15px; 
+                padding: 10px; 
+                border-radius: 5px; 
+                text-align: center; 
+                display: none; 
+            }
+            .success { 
+                background: #d4edda; 
+                color: #155724; 
+                border: 1px solid #c3e6cb;
+            }
+            .error { 
+                background: #f8d7da; 
+                color: #721c24; 
+                border: 1px solid #f5c6cb;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="login-container">
+            <div class="logo">
+                <h1>🌐 Great Nexus</h1>
+                <p>Ecossistema Empresarial Inteligente</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required placeholder="seu@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Senha:</label>
+                    <input type="password" id="password" name="password" required placeholder="Sua senha">
+                </div>
+
+                <button type="submit" class="btn-login">Entrar no Sistema</button>
+            </form>
+
+            <div class="demo-accounts">
+                <h3>📋 Sistema com PostgreSQL</h3>
+                <div class="account">
+                    <strong>Banco:</strong> Dados persistentes ativos
+                </div>
+                <div class="account">
+                    <strong>Segurança:</strong> UUIDs e relações
+                </div>
+            </div>
+
+            <div id="message" class="message"></div>
+        </div>
+
+        <script>
+            document.getElementById('loginForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const messageDiv = document.getElementById('message');
+
+                messageDiv.style.display = 'none';
+                messageDiv.className = 'message';
+
+                try {
+                    const response = await fetch('/api/v1/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ email, password })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        messageDiv.className = 'message success';
+                        messageDiv.textContent = '✅ Login bem-sucedido! Redirecionando...';
+                        messageDiv.style.display = 'block';
+                        
+                        localStorage.setItem('token', data.data.accessToken);
+                        localStorage.setItem('user', JSON.stringify(data.data.user));
+                        
+                        setTimeout(() => {
+                            window.location.href = '/dashboard';
+                        }, 2000);
+                    } else {
+                        messageDiv.className = 'message error';
+                        messageDiv.textContent = '❌ ' + data.error;
+                        messageDiv.style.display = 'block';
+                    }
+                } catch (error) {
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = '❌ Erro de conexão. Tente novamente.';
+                    messageDiv.style.display = 'block';
+                }
+            });
+
+            // Preencher automaticamente para teste
+            document.getElementById('email').value = 'admin@greatnexus.com';
+            document.getElementById('password').value = 'admin123';
+        </script>
+    </body>
+    </html>
+  `);
 });
 
-// Dashboard (mantido igual) 
+// Dashboard
 app.get("/dashboard", (req, res) => {
-  // ... (código do dashboard anterior)
-  res.send(`...`); // Manter o HTML completo do dashboard
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Great Nexus - Dashboard</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                margin: 0; 
+                background: #f5f5f5;
+            }
+            .header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .header h1 {
+                margin: 0;
+            }
+            .user-info {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }
+            .logout-btn {
+                background: rgba(255,255,255,0.2);
+                color: white;
+                border: 1px solid white;
+                padding: 8px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+            .logout-btn:hover {
+                background: rgba(255,255,255,0.3);
+            }
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            .modules {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 20px;
+                margin-top: 20px;
+            }
+            .module-card {
+                background: white;
+                padding: 25px;
+                border-radius: 10px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                border-left: 4px solid #667eea;
+            }
+            .module-card h3 {
+                margin-top: 0;
+                color: #333;
+            }
+            .module-card p {
+                color: #666;
+                margin-bottom: 15px;
+            }
+            .btn {
+                background: #667eea;
+                color: white;
+                padding: 10px 15px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                text-decoration: none;
+                display: inline-block;
+            }
+            .btn:hover {
+                background: #5a6fd8;
+            }
+            .token-info {
+                background: #e8f4fd;
+                padding: 15px;
+                border-radius: 5px;
+                margin: 20px 0;
+                font-family: monospace;
+                word-break: break-all;
+            }
+            .db-status {
+                background: #d4edda;
+                padding: 10px;
+                border-radius: 5px;
+                margin: 10px 0;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>🌐 Great Nexus - Dashboard</h1>
+            <div class="user-info">
+                <span id="userName">Carregando...</span>
+                <button class="logout-btn" onclick="logout()">Sair</button>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="db-status">
+                ✅ Sistema conectado ao PostgreSQL com UUIDs
+            </div>
+
+            <div class="token-info">
+                <strong>Token de Acesso:</strong><br>
+                <span id="accessToken">Carregando...</span>
+            </div>
+
+            <div class="modules">
+                <div class="module-card">
+                    <h3>📦 Gestão de Produtos</h3>
+                    <p>Gerencie seu inventário, preços e categorias de produtos</p>
+                    <button class="btn" onclick="manageProducts()">Gerenciar Produtos</button>
+                </div>
+
+                <div class="module-card">
+                    <h3>💰 Gestão de Vendas</h3>
+                    <p>Registre e acompanhe vendas, faturas e receitas</p>
+                    <button class="btn" onclick="manageSales()">Gerenciar Vendas</button>
+                </div>
+
+                <div class="module-card">
+                    <h3>🏢 Gestão de Empresas</h3>
+                    <p>Gerencie múltiplas empresas no mesmo tenant</p>
+                    <button class="btn" onclick="manageCompanies()">Gerenciar Empresas</button>
+                </div>
+
+                <div class="module-card">
+                    <h3>👥 Gestão de Usuários</h3>
+                    <p>Administre usuários e permissões do sistema</p>
+                    <button class="btn" onclick="manageUsers()">Gerenciar Usuários</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Carregar informações do usuário
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                alert('Sessão expirada. Faça login novamente.');
+                window.location.href = '/login';
+            }
+
+            document.getElementById('userName').textContent = user.name || 'Usuário';
+            document.getElementById('accessToken').textContent = token || 'Não encontrado';
+
+            function logout() {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+            }
+
+            function manageProducts() {
+                alert('Em desenvolvimento: Gestão de Produtos');
+            }
+
+            function manageSales() {
+                alert('Em desenvolvimento: Gestão de Vendas');
+            }
+
+            function manageCompanies() {
+                alert('Em desenvolvimento: Gestão de Empresas');
+            }
+
+            function manageUsers() {
+                alert('Em desenvolvimento: Gestão de Usuários');
+            }
+        </script>
+    </body>
+    </html>
+  `);
 });
 
 // Página Inicial
@@ -121,11 +510,12 @@ app.get("/", (req, res) => {
   res.json({
     message: "🌐 Great Nexus API Online",
     version: "2.0.0",
-    database: "PostgreSQL",
+    database: "PostgreSQL com UUID",
     endpoints: {
       auth: "POST /api/v1/auth/login",
       products: "GET/POST /api/v1/erp/products",
       sales: "GET/POST /api/v1/erp/sales",
+      companies: "GET/POST /api/v1/erp/companies",
       investments: "POST /api/v1/mola/invest",
       health: "GET /health",
       login_page: "GET /login",
@@ -135,7 +525,7 @@ app.get("/", (req, res) => {
 });
 
 // =============================================
-// API ROTAS COM BANCO DE DADOS
+// API ROTAS COM SEU BANCO DE DADOS
 // =============================================
 
 // Login API
@@ -148,8 +538,11 @@ app.post("/api/v1/auth/login", async (req, res) => {
     }
 
     // Buscar usuário no banco
-    const result = await db.query(
-      'SELECT * FROM users WHERE email = $1',
+    const result = await pool.query(
+      `SELECT users.*, tenants.name as tenant_name, tenants.currency as tenant_currency 
+       FROM users 
+       JOIN tenants ON users.tenant_id = tenants.id 
+       WHERE users.email = $1`,
       [email]
     );
 
@@ -159,32 +552,35 @@ app.post("/api/v1/auth/login", async (req, res) => {
 
     const user = result.rows[0];
 
-    // Verificar senha
-    const passwordIsValid = bcrypt.compareSync(password, user.password);
+    // Verificar senha (usando bcrypt)
+    const passwordIsValid = bcrypt.compareSync(password, user.password_hash);
     if (!passwordIsValid) {
       return res.status(401).json({ success: false, error: "Senha incorreta" });
     }
 
-    // Buscar tenant se existir
-    let tenant = null;
-    if (user.tenant_id) {
-      const tenantResult = await db.query(
-        'SELECT * FROM tenants WHERE id = $1',
-        [user.tenant_id]
-      );
-      tenant = tenantResult.rows[0];
-    }
-
     const token = generateToken(user);
 
-    // Remover password da resposta
-    const { password: _, ...userWithoutPassword } = user;
+    // Preparar resposta
+    const userResponse = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      tenant_id: user.tenant_id,
+      created_at: user.created_at
+    };
+
+    const tenant = {
+      id: user.tenant_id,
+      name: user.tenant_name,
+      currency: user.tenant_currency
+    };
 
     res.json({
       success: true,
       message: "Login bem-sucedido!",
       data: { 
-        user: userWithoutPassword, 
+        user: userResponse, 
         tenant, 
         accessToken: token 
       },
@@ -200,15 +596,19 @@ app.post("/api/v1/auth/login", async (req, res) => {
 });
 
 // =============================================
-// ROTAS PROTEGIDAS COM BANCO DE DADOS
+// ROTAS PROTEGIDAS COM SEU BANCO
 // =============================================
 
 // Produtos - Listar
 app.get("/api/v1/erp/products", verifyToken, async (req, res) => {
   try {
-    const result = await db.query(
-      'SELECT * FROM products WHERE tenant_id = $1 ORDER BY created_at DESC',
-      [req.user.tenant_id || 'tenant-1']
+    const result = await pool.query(
+      `SELECT products.*, companies.name as company_name 
+       FROM products 
+       JOIN companies ON products.company_id = companies.id 
+       WHERE products.tenant_id = $1 
+       ORDER BY products.created_at DESC`,
+      [req.user.tenant_id]
     );
     
     res.json({ 
@@ -228,23 +628,20 @@ app.get("/api/v1/erp/products", verifyToken, async (req, res) => {
 // Produtos - Criar
 app.post("/api/v1/erp/products", verifyToken, async (req, res) => {
   try {
-    const { sku, name, price, stock, category, description } = req.body;
+    const { sku, name, price, stock, company_id } = req.body;
     
-    if (!name || !price) {
+    if (!name || !price || !company_id) {
       return res.status(400).json({ 
         success: false, 
-        error: "Nome e preço são obrigatórios" 
+        error: "Nome, preço e empresa são obrigatórios" 
       });
     }
 
-    const productId = `prod-${Date.now()}`;
-    const tenantId = req.user.tenant_id || 'tenant-1';
-
-    const result = await db.query(
-      `INSERT INTO products (id, sku, name, price, stock, category, description, tenant_id, created_by) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+    const result = await pool.query(
+      `INSERT INTO products (tenant_id, company_id, sku, name, price, stock) 
+       VALUES ($1, $2, $3, $4, $5, $6) 
        RETURNING *`,
-      [productId, sku || `SKU-${Date.now()}`, name, price, stock || 0, category, description, tenantId, req.user.id]
+      [req.user.tenant_id, company_id, sku || `SKU-${Date.now()}`, name, price, stock || 0]
     );
 
     const newProduct = result.rows[0];
@@ -263,12 +660,12 @@ app.post("/api/v1/erp/products", verifyToken, async (req, res) => {
   }
 });
 
-// Vendas - Listar
-app.get("/api/v1/erp/sales", verifyToken, async (req, res) => {
+// Empresas - Listar
+app.get("/api/v1/erp/companies", verifyToken, async (req, res) => {
   try {
-    const result = await db.query(
-      'SELECT * FROM sales WHERE tenant_id = $1 ORDER BY created_at DESC',
-      [req.user.tenant_id || 'tenant-1']
+    const result = await pool.query(
+      'SELECT * FROM companies WHERE tenant_id = $1 ORDER BY created_at DESC',
+      [req.user.tenant_id]
     );
     
     res.json({ 
@@ -277,162 +674,73 @@ app.get("/api/v1/erp/sales", verifyToken, async (req, res) => {
       count: result.rows.length
     });
   } catch (error) {
-    console.error("Error fetching sales:", error);
+    console.error("Error fetching companies:", error);
     res.status(500).json({ 
       success: false, 
-      error: "Erro ao buscar vendas" 
+      error: "Erro ao buscar empresas" 
     });
   }
 });
 
-// Vendas - Criar
-app.post("/api/v1/erp/sales", verifyToken, async (req, res) => {
+// Empresas - Criar
+app.post("/api/v1/erp/companies", verifyToken, async (req, res) => {
   try {
-    const { invoice_number, total, status, customer_name } = req.body;
+    const { name, currency } = req.body;
     
-    if (!invoice_number || !total) {
+    if (!name) {
       return res.status(400).json({ 
         success: false, 
-        error: "Número da fatura e total são obrigatórios" 
+        error: "Nome da empresa é obrigatório" 
       });
     }
 
-    const saleId = `sale-${Date.now()}`;
-    const tenantId = req.user.tenant_id || 'tenant-1';
-
-    const result = await db.query(
-      `INSERT INTO sales (id, invoice_number, total, status, customer_name, tenant_id, created_by) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) 
+    const result = await pool.query(
+      `INSERT INTO companies (tenant_id, name, currency) 
+       VALUES ($1, $2, $3) 
        RETURNING *`,
-      [saleId, invoice_number, total, status || 'pending', customer_name, tenantId, req.user.id]
+      [req.user.tenant_id, name, currency || 'MZN']
     );
 
-    const newSale = result.rows[0];
+    const newCompany = result.rows[0];
     
     res.status(201).json({ 
       success: true, 
-      message: "Venda registrada com sucesso!", 
-      data: newSale 
+      message: "Empresa criada com sucesso!", 
+      data: newCompany 
     });
   } catch (error) {
-    console.error("Error creating sale:", error);
+    console.error("Error creating company:", error);
     res.status(500).json({ 
       success: false, 
-      error: "Erro ao registrar venda" 
+      error: "Erro ao criar empresa" 
     });
   }
 });
 
-// Investimentos Mola
-app.post("/api/v1/mola/invest", verifyToken, async (req, res) => {
+// =============================================
+// INICIALIZAR E INICIAR SERVIDOR
+// =============================================
+const startServer = async () => {
   try {
-    const { capital, diasUteis } = req.body;
+    // Inicializar banco de dados
+    await initializeDatabase();
     
-    if (!capital || !diasUteis) {
-      return res.status(400).json({ 
-        success: false, 
-        error: "Capital e dias úteis são obrigatórios" 
-      });
-    }
-
-    const capitalNum = parseFloat(capital);
-    const diasUteisNum = parseInt(diasUteis);
-    
-    if (capitalNum <= 0 || diasUteisNum <= 0) {
-      return res.status(400).json({ 
-        success: false, 
-        error: "Capital e dias úteis devem ser maiores que zero" 
-      });
-    }
-
-    const taxa = 0.003;
-    const rendimento = capitalNum * diasUteisNum * taxa;
-    const irps = rendimento * 0.2;
-    const liquido = rendimento - irps;
-
-    const investmentId = `inv-${Date.now()}`;
-
-    const result = await db.query(
-      `INSERT INTO investments (id, user_id, capital, dias_uteis, rendimento_bruto, irps, rendimento_liquido) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) 
-       RETURNING *`,
-      [investmentId, req.user.id, capitalNum, diasUteisNum, rendimento, irps, liquido]
-    );
-
-    const newInvestment = result.rows[0];
-    
-    res.status(201).json({ 
-      success: true, 
-      message: "Investimento simulado com sucesso!",
-      data: newInvestment 
-    });
-  } catch (error) {
-    console.error("Error creating investment:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Erro ao simular investimento" 
-    });
-  }
-});
-
-// Upload de Documentos
-app.post("/api/v1/documents/upload", verifyToken, upload.single("file"), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ 
-        success: false, 
-        error: "Nenhum arquivo enviado" 
-      });
-    }
-
-    const docId = `doc-${Date.now()}`;
-
-    const result = await db.query(
-      `INSERT INTO documents (id, user_id, name, path, type, size) 
-       VALUES ($1, $2, $3, $4, $5, $6) 
-       RETURNING *`,
-      [docId, req.user.id, req.file.originalname, `/uploads/${req.file.filename}`, req.file.mimetype, req.file.size]
-    );
-
-    const newDoc = result.rows[0];
-    
-    res.status(201).json({ 
-      success: true, 
-      message: "Documento carregado com sucesso!", 
-      data: newDoc 
-    });
-  } catch (error) {
-    console.error("Error uploading document:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Erro ao fazer upload do documento" 
-    });
-  }
-});
-
-// =============================================
-// ROTA DE FALLBACK
-// =============================================
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    error: "Rota não encontrada",
-    path: req.url,
-    method: req.method
-  });
-});
-
-// =============================================
-// INICIAR SERVIDOR
-// =============================================
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`
+    // Iniciar servidor
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`
 🚀 Great Nexus com PostgreSQL iniciado na porta ${PORT}
-🗄️  Database: ${process.env.DATABASE_URL ? 'Conectado' : 'Não configurado'}
+🗄️  Database: PostgreSQL com UUID
 📍 Health: http://localhost:${PORT}/health
 🔐 Login Page: http://localhost:${PORT}/login
 📊 Dashboard: http://localhost:${PORT}/dashboard
-  `);
-});
+      `);
+    });
+  } catch (error) {
+    console.error('❌ Falha ao iniciar servidor:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 module.exports = app;
