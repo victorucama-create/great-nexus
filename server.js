@@ -112,6 +112,202 @@ app.get("/health", (req, res) => {
   });
 });
 
+// Página de Login
+app.get("/login", (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Great Nexus - Login</title>
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                height: 100vh; 
+                display: flex; 
+                justify-content: center; 
+                align-items: center; 
+                margin: 0; 
+            }
+            .login-container { 
+                background: white; 
+                padding: 40px; 
+                border-radius: 15px; 
+                box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+                width: 100%;
+                max-width: 400px;
+            }
+            .logo { 
+                text-align: center; 
+                margin-bottom: 30px; 
+            }
+            .logo h1 { 
+                color: #333; 
+                margin-bottom: 5px; 
+                font-size: 24px;
+            }
+            .logo p {
+                color: #666;
+                margin: 0;
+            }
+            .form-group { 
+                margin-bottom: 20px; 
+            }
+            .form-group label { 
+                display: block; 
+                margin-bottom: 5px; 
+                color: #333; 
+                font-weight: bold; 
+            }
+            .form-group input { 
+                width: 100%; 
+                padding: 12px; 
+                border: 2px solid #ddd; 
+                border-radius: 8px; 
+                font-size: 16px; 
+            }
+            .form-group input:focus { 
+                outline: none; 
+                border-color: #667eea; 
+            }
+            .btn-login { 
+                width: 100%; 
+                padding: 12px; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                color: white; 
+                border: none; 
+                border-radius: 8px; 
+                font-size: 16px; 
+                cursor: pointer; 
+                transition: opacity 0.3s;
+            }
+            .btn-login:hover { 
+                opacity: 0.9; 
+            }
+            .demo-accounts { 
+                margin-top: 20px; 
+                padding: 15px; 
+                background: #f8f9fa; 
+                border-radius: 8px; 
+                font-size: 12px; 
+            }
+            .demo-accounts h3 {
+                margin: 0 0 10px 0;
+                color: #333;
+            }
+            .account {
+                margin-bottom: 5px;
+                padding: 5px;
+                background: white;
+                border-radius: 4px;
+            }
+            .message { 
+                margin-top: 15px; 
+                padding: 10px; 
+                border-radius: 5px; 
+                text-align: center; 
+                display: none; 
+            }
+            .success { 
+                background: #d4edda; 
+                color: #155724; 
+                border: 1px solid #c3e6cb;
+            }
+            .error { 
+                background: #f8d7da; 
+                color: #721c24; 
+                border: 1px solid #f5c6cb;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="login-container">
+            <div class="logo">
+                <h1>🌐 Great Nexus</h1>
+                <p>Ecossistema Empresarial Inteligente</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required placeholder="seu@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Senha:</label>
+                    <input type="password" id="password" name="password" required placeholder="Sua senha">
+                </div>
+
+                <button type="submit" class="btn-login">Entrar no Sistema</button>
+            </form>
+
+            <div class="demo-accounts">
+                <h3>📋 Contas de Demonstração:</h3>
+                <div class="account">
+                    <strong>Admin:</strong> admin@greatnexus.com / admin123
+                </div>
+                <div class="account">
+                    <strong>Demo:</strong> demo@greatnexus.com / demo123
+                </div>
+            </div>
+
+            <div id="message" class="message"></div>
+        </div>
+
+        <script>
+            document.getElementById('loginForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const messageDiv = document.getElementById('message');
+
+                messageDiv.style.display = 'none';
+                messageDiv.className = 'message';
+
+                try {
+                    const response = await fetch('/api/v1/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ email, password })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        messageDiv.className = 'message success';
+                        messageDiv.textContent = '✅ Login bem-sucedido! Redirecionando...';
+                        messageDiv.style.display = 'block';
+                        
+                        localStorage.setItem('token', data.data.accessToken);
+                        localStorage.setItem('user', JSON.stringify(data.data.user));
+                        
+                        setTimeout(() => {
+                            alert('Login realizado com sucesso!\\n\\nToken: ' + data.data.accessToken + '\\nUsuário: ' + data.data.user.name + '\\n\\nAgora você pode usar as APIs protegidas.');
+                        }, 1000);
+                    } else {
+                        messageDiv.className = 'message error';
+                        messageDiv.textContent = '❌ ' + data.error;
+                        messageDiv.style.display = 'block';
+                    }
+                } catch (error) {
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = '❌ Erro de conexão. Tente novamente.';
+                    messageDiv.style.display = 'block';
+                }
+            });
+
+            // Preencher automaticamente para teste
+            document.getElementById('email').value = 'admin@greatnexus.com';
+            document.getElementById('password').value = 'admin123';
+        </script>
+    </body>
+    </html>
+  `);
+});
+
 // Página Inicial
 app.get("/", (req, res) => {
   res.json({
@@ -122,7 +318,8 @@ app.get("/", (req, res) => {
       products: "GET/POST /api/v1/erp/products",
       sales: "GET/POST /api/v1/erp/sales",
       investments: "POST /api/v1/mola/invest",
-      health: "GET /health"
+      health: "GET /health",
+      login_page: "GET /login"
     }
   });
 });
@@ -244,6 +441,7 @@ app.use((req, res) => {
     available_routes: [
       "GET /",
       "GET /health", 
+      "GET /login",
       "POST /api/v1/auth/login",
       "GET /api/v1/erp/products",
       "POST /api/v1/erp/products",
@@ -262,7 +460,8 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`
 🚀 Great Nexus iniciado na porta ${PORT}
 📍 Health: http://localhost:${PORT}/health
-🔐 Login: POST http://localhost:${PORT}/api/v1/auth/login
+🔐 Login Page: http://localhost:${PORT}/login
+🔐 API Login: POST http://localhost:${PORT}/api/v1/auth/login
   `);
 });
 
