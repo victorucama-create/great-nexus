@@ -3,637 +3,634 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Great Nexus — Painel</title>
-  <meta name="description" content="Great Nexus - Ecossistema Empresarial Inteligente" />
+  <title>Great Nexus — Ecossistema Empresarial Inteligente</title>
+  <meta name="description" content="Great Nexus - ERP, CRM, MRP, B2B marketplace and fintech integrated.">
+  <meta name="theme-color" content="#0f1724" />
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="" crossorigin="anonymous">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
-    /* ---------- BASIC RESET & THEME ---------- */
+    /* ---------- THEME & RESET ---------- */
     :root{
-      --primary:#007BFF;
-      --dark:#0b2447;
-      --muted:#6b7280;
-      --bg:#f3f4f6;
+      --bg:#0f1724;
+      --panel:#0b1220;
+      --muted:#a0aec0;
       --card:#ffffff;
-      --success:#16a34a;
-      --danger:#dc2626;
-      --sidebar-width: 280px;
-      --max-width:1200px;
-      --mono: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --accent:#0ea5e9;
+      --accent-2:#06b6d4;
+      --success:#10b981;
+      --danger:#ef4444;
+      --sidebar:280px;
+      --glass: rgba(255,255,255,0.03);
+      --glass-2: rgba(255,255,255,0.02);
+      --radius:12px;
+      font-synthesis: none;
+      color-scheme: dark;
     }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+    body{background:linear-gradient(180deg,#061026 0%, #071426 100%);color:#e6eef6; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:var(--mono);background:var(--bg);color:#111}
-    a{color:inherit;text-decoration:none}
-    button{cursor:pointer}
+    a{color:var(--accent)}
+    button{font-family:inherit}
     /* ---------- LAYOUT ---------- */
-    .app{display:flex;height:100vh;overflow:hidden}
+    .app{display:flex;min-height:100vh}
     aside.sidebar{
-      width:var(--sidebar-width);
-      background:linear-gradient(180deg,var(--primary),#0056d6);
-      color:white;
-      display:flex;flex-direction:column;
-      box-shadow: 2px 0 6px rgba(0,0,0,0.08);
+      width:var(--sidebar);
+      background:linear-gradient(180deg,#042849,#023047);
+      padding:18px 12px;display:flex;flex-direction:column;gap:12px;border-right:1px solid rgba(255,255,255,0.03);
     }
-    .sidebar .logo{padding:20px;font-weight:700;font-size:1.1rem}
-    .menu{flex:1;padding:10px 8px;overflow:auto}
-    .menu a{display:block;padding:10px 12px;border-radius:6px;margin:6px 4px;color:white;opacity:0.95}
-    .menu a:hover{background:rgba(255,255,255,0.06)}
-    .menu .section-title{opacity:0.85;font-size:0.85rem;margin:12px 8px;color:rgba(255,255,255,0.9)}
-    .sidebar .footer{padding:12px;font-size:12px;text-align:center;border-top:1px solid rgba(255,255,255,0.06)}
-    main.content{flex:1;overflow:auto;padding:20px}
-    header.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-    .search{max-width:420px;flex:1;margin-left:10px}
-    .card{background:var(--card);padding:14px;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,0.04);margin-bottom:12px}
+    .brand{display:flex;align-items:center;gap:12px;padding:8px 6px}
+    .brand .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(90deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:700;color:#021224}
+    .brand h1{font-size:1rem;margin:0}
+    .tenant-info{padding:10px;background:var(--glass);border-radius:10px}
+    nav.menu{flex:1;overflow:auto;padding-right:6px}
+    nav.menu .section{margin-top:8px;color:rgba(255,255,255,0.65);font-size:.85rem;padding:6px 8px}
+    nav.menu a.item{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;color:#e6eef6;margin:6px 4px;font-weight:500}
+    nav.menu a.item:hover{background:rgba(255,255,255,0.03)}
+    footer.sidebar-foot{font-size:.8rem;color:rgba(255,255,255,0.55);padding:8px;text-align:center}
+    /* main content */
+    main.main{flex:1;padding:18px;overflow:auto}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+    .search {background:var(--glass);padding:8px;border-radius:10px;display:flex;align-items:center;gap:8px;min-width:320px}
+    .search input{background:transparent;border:0;color:var(--muted);outline:none}
+    .top-actions{display:flex;align-items:center;gap:10px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
     .grid{display:grid;gap:12px}
     .grid.cols-3{grid-template-columns:repeat(3,1fr)}
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:10px;border-bottom:1px solid #eef2f7;text-align:left}
-    th{background:#f8fafc}
-    .btn{display:inline-block;padding:8px 12px;border-radius:6px;background:var(--primary);color:white;border:none}
-    .btn.secondary{background:#6b7280}
-    .small{font-size:0.9rem}
-    input[type="text"],input[type="email"],input[type="password"],select,textarea{
-      padding:8px;border-radius:6px;border:1px solid #e6eef8;width:100%;
-    }
+    .kpi{display:flex;gap:12px;align-items:center}
+    .kpi .metric{font-size:1.5rem;font-weight:700}
+    .muted{color:var(--muted);font-size:.9rem}
+    table{width:100%;border-collapse:collapse;color:inherit}
+    th,td{padding:10px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.03);font-size:.95rem}
+    th{color:var(--muted);font-weight:600;font-size:.85rem}
+    .btn{background:var(--accent);color:#012;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;border:0;font-weight:700}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+    .btn.small{padding:6px 8px;font-size:.9rem}
+    /* modal */
+    .overlay{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:60}
+    .modal{background:#081425;border-radius:12px;padding:12px;max-width:760px;width:100%;box-shadow:0 10px 30px rgba(2,6,23,0.6)}
     .row{display:flex;gap:12px}
     .col{flex:1}
-    .hidden{display:none}
+    input,select,textarea{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:10px;border-radius:8px;color:var(--muted);width:100%}
     /* responsive */
     @media (max-width:900px){
       aside.sidebar{display:none}
-      .app.mobile{display:block}
-      .mobile-header{display:flex;align-items:center;gap:8px;padding:10px;background:#fff}
+      .search{min-width:unset}
     }
-    /* badges */
-    .badge{padding:6px 8px;border-radius:20px;background:#eef2ff;color:var(--primary);font-weight:600;font-size:.85rem;display:inline-block}
-    /* file list */
+    /* helpers */
+    .hidden{display:none}
+    .text-muted{color:var(--muted)}
+    .badge{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:999px;font-size:.85rem}
     .file-list{list-style:none;padding:0;margin:0}
-    .file-list li{padding:8px;border-bottom:1px dashed #eef2f7}
-    pre{background:#0b1220;color:#e6f0ff;padding:12px;border-radius:6px;overflow:auto}
+    .file-list li{padding:8px;border-radius:8px;background:rgba(255,255,255,0.01);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+    .notice{padding:10px;border-radius:8px;background:linear-gradient(90deg, rgba(6,182,212,0.08), rgba(14,165,233,0.04));color:var(--muted)}
+    /* cookie bar */
+    #cookie-bar{position:fixed;left:12px;right:12px;bottom:12px;padding:12px;border-radius:10px;background:linear-gradient(90deg,#021524, #042e3b);display:flex;justify-content:space-between;align-items:center;gap:12px;z-index:80}
   </style>
 </head>
 <body>
-  <div id="app-root" class="app" role="application" aria-label="Great Nexus App">
+  <!--
+    Great Nexus - Frontend Starter (SaaS-ready)
+    - Save as index.html and serve as static site or via Express.
+    - Replace API_BASE below and implement backend endpoints.
+    - Security: frontend assumes backend provides JWT & pre-signed S3 URLs.
+  -->
+
+  <div id="app" class="app" role="application" aria-label="Great Nexus App">
+
     <!-- SIDEBAR -->
-    <aside class="sidebar" id="sidebar">
-      <div class="logo">Great Nexus</div>
-      <div class="menu" id="menu">
-        <div class="section-title">Main</div>
-        <a href="#" data-route="dashboard">Dashboard</a>
-        <a href="#" data-route="sales">Vendas / Sales</a>
-        <a href="#" data-route="inventory">Inventário / Inventory</a>
-        <a href="#" data-route="mrp">MRP / Production</a>
-        <a href="#" data-route="crm">CRM</a>
-        <a href="#" data-route="greatmola">Great Mola</a>
-        <a href="#" data-route="b2b">B2B Marketplace</a>
-        <a href="#" data-route="logistics">Logística</a>
-        <a href="#" data-route="investments">Investimentos</a>
-        <div class="section-title">Admin</div>
-        <a href="#" data-route="superadmin">Super Admin</a>
-        <a href="#" data-route="documents">Documentos</a>
-        <a href="#" data-route="settings">Settings</a>
-        <div class="section-title">Support</div>
-        <a href="#" id="logout">Logout</a>
+    <aside class="sidebar" role="navigation" aria-label="Sidebar">
+      <div class="brand" role="banner">
+        <div class="logo" aria-hidden="true"><i class="fas fa-network-wired" style="font-size:20px;color:white"></i></div>
+        <div>
+          <h1 style="margin:0">Great Nexus</h1>
+          <div class="muted" style="font-size:.85rem">Business Ecosystem</div>
+        </div>
       </div>
-      <div class="footer">Powered by Great Pollo Technologies</div>
+
+      <div class="tenant-info">
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="width:42px;height:42px;border-radius:8px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center"><i class="fas fa-building"></i></div>
+          <div>
+            <div id="tenantName" style="font-weight:700">Minha Empresa</div>
+            <div class="text-muted" id="tenantPlan">Plano Starter</div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="menu" id="mainMenu">
+        <div class="section">Main</div>
+        <a class="item" data-route="dashboard" href="#"><i class="fas fa-home"></i><span>Dashboard</span></a>
+        <a class="item" data-route="sales" href="#"><i class="fas fa-shopping-cart"></i><span>Vendas</span></a>
+        <a class="item" data-route="inventory" href="#"><i class="fas fa-warehouse"></i><span>Inventário</span></a>
+        <a class="item" data-route="products" href="#"><i class="fas fa-cubes"></i><span>Produtos</span></a>
+
+        <div class="section">Produção</div>
+        <a class="item" data-route="mrp" href="#"><i class="fas fa-industry"></i><span>MRP</span></a>
+
+        <div class="section">Finanças</div>
+        <a class="item" data-route="investments" href="#"><i class="fas fa-chart-line"></i><span>Investimentos</span></a>
+        <a class="item" data-route="wallet" href="#"><i class="fas fa-wallet"></i><span>Carteira</span></a>
+
+        <div class="section">B2B & Logística</div>
+        <a class="item" data-route="b2b" href="#"><i class="fas fa-handshake"></i><span>B2B Marketplace</span></a>
+        <a class="item" data-route="logistics" href="#"><i class="fas fa-truck"></i><span>Logística</span></a>
+
+        <div style="height:24px"></div>
+      </nav>
+
+      <footer class="sidebar-foot">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="text-muted">© <span id="year"></span> Great Group</div>
+          <div class="text-muted">v0.1 • Beta</div>
+        </div>
+      </footer>
     </aside>
 
-    <!-- CONTENT -->
-    <main class="content" id="main">
-      <header class="topbar">
+    <!-- MAIN CONTENT -->
+    <main class="main" role="main">
+      <!-- TOPBAR -->
+      <div class="topbar">
         <div style="display:flex;align-items:center;gap:12px">
-          <button id="navToggle" class="btn secondary hidden">Menu</button>
-          <h2 id="page-title">Dashboard</h2>
-          <div class="search">
-            <input type="text" id="global-search" placeholder="Pesquisar / Search..." />
+          <div class="search" role="search" aria-label="Search">
+            <i class="fas fa-search text-muted"></i>
+            <input id="globalSearch" placeholder="Pesquisar (clientes, produtos, faturas)..." aria-label="Pesquisar" />
           </div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:center">
-          <div id="userArea" class="small">Olá, <strong id="userName">Admin</strong></div>
-          <select id="langSelect" title="Language" aria-label="Language">
-            <option value="pt">PT</option>
-            <option value="en">EN</option>
-          </select>
-        </div>
-      </header>
-
-      <!-- PAGES / TEMPLATES -->
-      <section id="page-dashboard" class="page">
-        <div class="card">
-          <div class="row">
-            <div class="col">
-              <h3>Resumo Financeiro / Financial Summary</h3>
-              <div class="grid cols-3" style="margin-top:8px">
-                <div class="card">
-                  <div class="small">Vendas Mensais</div>
-                  <h2>245.700 MZN</h2>
-                </div>
-                <div class="card">
-                  <div class="small">Caixa</div>
-                  <h2>75.400 MZN</h2>
-                </div>
-                <div class="card">
-                  <div class="small">Investimentos (Mola)</div>
-                  <h2>125.200 MZN</h2>
-                </div>
-              </div>
-            </div>
-            <div class="col">
-              <h3>Atividades Recentes / Recent</h3>
-              <ul class="file-list" id="recent-activities">
-                <li>05/11/2025 — Fatura #INV-1001 paga</li>
-                <li>03/11/2025 — Nova empresa cadastrada</li>
-              </ul>
-            </div>
-          </div>
+          <div id="breadcrumb" class="muted">Dashboard</div>
         </div>
 
-        <div class="card">
-          <h3>Indicadores / KPIs</h3>
-          <div class="row" style="margin-top:8px">
-            <div class="col">
-              <h4>Top Products</h4>
-              <ol id="top-products">
-                <li>Hambúrguer de Frango</li>
-                <li>Piri-Piri 500g</li>
-              </ol>
+        <div class="top-actions" role="toolbar" aria-label="Top actions">
+          <div class="badge text-muted" id="appLang">PT / EN</div>
+          <button class="btn ghost small" id="btnNotifications" title="Notificações"><i class="fas fa-bell"></i><span class="badge" id="notifCount">0</span></button>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="text-align:right">
+              <div id="userName" style="font-weight:700">Administrador</div>
+              <div class="muted" id="userRole">Super Admin</div>
             </div>
-            <div class="col">
-              <h4>Atividades do B2B</h4>
-              <p>Pedidos B2B esta semana: <strong>12</strong></p>
-              <p>Transações fechadas: <strong>8</strong></p>
-            </div>
-            <div class="col">
-              <h4>Últimos Logs</h4>
-              <pre id="logbox">No recent logs</pre>
-            </div>
+            <button class="btn small" id="btnLogout"><i class="fas fa-sign-out-alt"></i> Logout</button>
           </div>
         </div>
-      </section>
+      </div>
 
-      <!-- SALES PAGE -->
-      <section id="page-sales" class="page hidden">
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <h3>Vendas / Sales</h3>
+      <!-- PAGE CONTAINER -->
+      <section id="pages" aria-live="polite">
+        <!-- DASHBOARD -->
+        <div id="page-dashboard" class="page card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
             <div>
-              <button class="btn" onclick="openNewSale()">Nova Venda</button>
-              <button class="btn secondary" onclick="exportCSV('sales')">Export CSV</button>
+              <h2 style="margin:0">Dashboard</h2>
+              <div class="muted">Visão geral do negócio</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn ghost small" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> Export PDF</button>
+              <button class="btn" id="newSaleBtn"><i class="fas fa-plus"></i> Nova Venda</button>
             </div>
           </div>
-          <table id="sales-table" style="margin-top:12px">
-            <thead><tr><th>Data</th><th>Cliente</th><th>Valor</th><th>Status</th></tr></thead>
-            <tbody>
-              <tr><td>05/11/2025</td><td>Loja Beira</td><td>5.400 MZN</td><td style="color:var(--success)">Pago</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
 
-      <!-- INVENTORY PAGE -->
-      <section id="page-inventory" class="page hidden">
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <h3>Inventário / Inventory</h3>
-            <div>
-              <button class="btn" onclick="openNewProduct()">Novo Produto</button>
-              <button class="btn secondary" onclick="exportCSV('products')">Export CSV</button>
-            </div>
-          </div>
-          <table id="inventory-table" style="margin-top:12px">
-            <thead><tr><th>Código</th><th>Produto</th><th>Stock</th><th>Preço</th></tr></thead>
-            <tbody>
-              <tr><td>PRD001</td><td>Hambúrguer de Frango</td><td>150</td><td>120 MZN</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
+          <div style="height:12px"></div>
 
-      <!-- MRP PAGE -->
-      <section id="page-mrp" class="page hidden">
-        <div class="card">
-          <h3>MRP / Production</h3>
-          <p>Ordens de produção e lista de materiais.</p>
-          <table>
-            <thead><tr><th>Ref</th><th>Produto</th><th>Qtd</th><th>Status</th></tr></thead>
-            <tbody><tr><td>OP-001</td><td>Carne Moída</td><td>50 kg</td><td>Em Produção</td></tr></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- CRM PAGE -->
-      <section id="page-crm" class="page hidden">
-        <div class="card">
-          <h3>CRM</h3>
-          <p>Leads, pipeline e campanhas.</p>
-          <table>
-            <thead><tr><th>Nome</th><th>Contato</th><th>Stage</th></tr></thead>
-            <tbody><tr><td>Maria José</td><td>+258 84 123 4567</td><td>Lead</td></tr></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- GREAT MOLA PAGE -->
-      <section id="page-greatmola" class="page hidden">
-        <div class="card">
-          <h3>Great Mola — Wallet & Investments</h3>
-          <div class="row">
-            <div class="col">
-              <p>Saldo: <strong id="mola-balance">125.200 MZN</strong></p>
-              <p>Investimentos ativos: <strong id="mola-count">3</strong></p>
-              <button class="btn" onclick="openInvest()">Investir</button>
-            </div>
-            <div class="col">
-              <h4>Simulação de Rendimento</h4>
-              <label>Capital (MZN)</label>
-              <input type="text" id="sim-capital" value="100000" />
-              <label>Dias úteis</label>
-              <input type="text" id="sim-days" value="22" />
-              <label>Taxa diária (%)</label>
-              <input type="text" id="sim-rate" value="0.3" />
-              <div style="margin-top:8px">
-                <button class="btn" onclick="simulateInvestment()">Calcular / Simulate</button>
+          <div class="grid cols-3">
+            <div class="card">
+              <div class="kpi">
+                <div class="metric" id="kpiSales">245.700 MZN</div>
+                <div class="muted">Vendas Mês</div>
               </div>
-              <div id="sim-result" style="margin-top:10px"></div>
+              <div style="height:6px"></div>
+              <div class="muted">Comparado ao mês anterior: <strong style="color:var(--success)">+12.5%</strong></div>
+            </div>
+
+            <div class="card">
+              <div class="kpi">
+                <div class="metric" id="kpiCash">75.400 MZN</div>
+                <div class="muted">Caixa</div>
+              </div>
+              <div style="height:6px"></div>
+              <div class="muted">Fluxo diário médio: <strong>3.2k</strong></div>
+            </div>
+
+            <div class="card">
+              <div class="kpi">
+                <div class="metric" id="kpiMola">125.200 MZN</div>
+                <div class="muted">Great Mola</div>
+              </div>
+              <div style="height:6px"></div>
+              <div class="muted">Investimentos ativos: <strong id="activeInvestments">3</strong></div>
+            </div>
+          </div>
+
+          <div style="height:12px"></div>
+
+          <div class="grid" style="grid-template-columns:2fr 1fr;gap:12px">
+            <div class="card">
+              <h3 style="margin-top:0">Vendas últimos 7 dias</h3>
+              <canvas id="chartSales7" style="max-height:240px"></canvas>
+            </div>
+
+            <div class="card">
+              <h3 style="margin-top:0">Atividade Recente</h3>
+              <div id="recentActivity" style="max-height:240px;overflow:auto"></div>
             </div>
           </div>
         </div>
-      </section>
 
-      <!-- B2B PAGE -->
-      <section id="page-b2b" class="page hidden">
-        <div class="card">
-          <h3>B2B Marketplace</h3>
-          <p>Encontre fornecedores e publique seu catálogo.</p>
-          <button class="btn" onclick="openB2BRegister()">Cadastrar Empresa</button>
-          <div style="margin-top:12px" id="b2b-list">
-            <table>
-              <thead><tr><th>Empresa</th><th>Setor</th><th>Plano</th><th>Ações</th></tr></thead>
-              <tbody><tr><td>Fornecedor A</td><td>Alimentos</td><td>Premium</td><td><button class="btn secondary" onclick="contactSeller()">Contact</button></td></tr></tbody>
+        <!-- PRODUCTS -->
+        <div id="page-products" class="page hidden card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h2>Produtos</h2>
+            <div style="display:flex;gap:8px">
+              <button class="btn ghost small" id="exportProductsCsv"><i class="fas fa-file-csv"></i> CSV</button>
+              <button class="btn" id="btnNewProduct"><i class="fas fa-plus"></i> Novo Produto</button>
+            </div>
+          </div>
+
+          <div style="height:12px"></div>
+          <div class="card">
+            <table aria-label="Lista de produtos">
+              <thead><tr><th>SKU</th><th>Nome</th><th>Preço</th><th>Stock</th><th></th></tr></thead>
+              <tbody id="productsTbody"></tbody>
             </table>
           </div>
         </div>
-      </section>
 
-      <!-- LOGISTICS -->
-      <section id="page-logistics" class="page hidden">
-        <div class="card">
-          <h3>Logística & Frete</h3>
-          <p>Gestão de frota, cotações e tracking.</p>
-          <table>
-            <thead><tr><th>Tracking</th><th>Origem</th><th>Destino</th><th>Status</th></tr></thead>
-            <tbody><tr><td>TCK-001</td><td>Beira</td><td>Maputo</td><td>Em Trânsito</td></tr></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- INVESTMENTS -->
-      <section id="page-investments" class="page hidden">
-        <div class="card">
-          <h3>Investimentos — Great Mola</h3>
-          <p>Manage investments, returns and taxes (IRPS).</p>
-          <table>
-            <thead><tr><th>ID</th><th>Capital</th><th>Dias</th><th>Rendimento Líquido</th><th>Ações</th></tr></thead>
-            <tbody id="invest-table-body">
-              <tr><td>INV-001</td><td>100000</td><td>22</td><td>5.280 MZN</td><td><button class="btn secondary" onclick="withdrawInvestment('INV-001')">Resgatar</button></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- DOCUMENTS PAGE -->
-      <section id="page-documents" class="page hidden">
-        <div class="card">
-          <h3>Documentos</h3>
-          <form id="uploadForm">
-            <label>Tipo</label>
-            <select id="docType"><option value="invoice">Invoice</option><option value="contract">Contract</option></select>
-            <label>Entidade (ID)</label>
-            <input id="entityId" type="text" value="company-123" />
-            <label>Ficheiro (PNG, JPG, PDF)</label>
-            <input id="fileInput" type="file" accept=".png,.jpg,.jpeg,.pdf" />
-            <div style="margin-top:10px">
-              <button class="btn" type="button" onclick="uploadDocument()">Upload</button>
-            </div>
-          </form>
-          <h4 style="margin-top:12px">Ficheiros Recentes</h4>
-          <ul id="docsList" class="file-list"></ul>
-        </div>
-      </section>
-
-      <!-- SUPERADMIN PAGE -->
-      <section id="page-superadmin" class="page hidden">
-        <div class="card">
-          <h3>Super Admin</h3>
-          <p>Controle global — planos, preços, comissões.</p>
-          <div>
-            <label>Taxa de Comissão B2B (%)</label>
-            <input id="sys_commission" type="text" value="3" />
-            <label>Taxa IRPS (%)</label>
-            <input id="sys_irps" type="text" value="20" />
-            <div style="margin-top:8px"><button class="btn" onclick="saveSystemSettings()">Salvar Configurações</button></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- SETTINGS PAGE -->
-      <section id="page-settings" class="page hidden">
-        <div class="card">
-          <h3>Settings</h3>
-          <p>Configurações da conta e integrações (Payments, S3, Analytics).</p>
-          <div class="row">
-            <div class="col">
-              <label>API Base URL</label>
-              <input id="apiBaseInput" type="text" value="" placeholder="https://great-erp.onrender.com" />
-            </div>
-            <div class="col">
-              <label>Moeda padrão</label>
-              <select id="currencySelect"><option>MZN</option><option>USD</option></select>
+        <!-- INVESTMENTS -->
+        <div id="page-investments" class="page hidden card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h2>Great Mola - Investimentos</h2>
+            <div style="display:flex;gap:8px">
+              <button class="btn ghost small" id="exportInvestCsv">Export CSV</button>
+              <button class="btn" id="btnNewInvestment"><i class="fas fa-plus"></i> Novo Investimento</button>
             </div>
           </div>
-          <div style="margin-top:8px"><button class="btn" onclick="saveSettings()">Salvar</button></div>
+
+          <div style="height:12px"></div>
+          <div class="grid cols-3">
+            <div class="card">
+              <div class="muted">Total Investido</div>
+              <div style="font-weight:800;font-size:1.4rem" id="totalInvested">0 MZN</div>
+            </div>
+            <div class="card">
+              <div class="muted">Retornos</div>
+              <div style="font-weight:800;font-size:1.4rem" id="totalReturns">0 MZN</div>
+            </div>
+            <div class="card">
+              <div class="muted">Ativos</div>
+              <div style="font-weight:800;font-size:1.4rem" id="countInvestments">0</div>
+            </div>
+          </div>
+
+          <div style="height:12px"></div>
+          <div class="card">
+            <h3 style="margin-top:0">Lista de Investimentos</h3>
+            <div id="investmentsList"></div>
+          </div>
         </div>
+
+        <!-- Placeholder pages -->
+        <div id="page-sales" class="page hidden card"><h2>Vendas</h2><p class="muted">Funcionalidade em desenvolvimento</p></div>
+        <div id="page-inventory" class="page hidden card"><h2>Inventário</h2><p class="muted">Funcionalidade em desenvolvimento</p></div>
+        <div id="page-mrp" class="page hidden card"><h2>MRP</h2><p class="muted">Funcionalidade em desenvolvimento</p></div>
+        <div id="page-b2b" class="page hidden card"><h2>B2B Marketplace</h2><p class="muted">Funcionalidade em desenvolvimento</p></div>
+        <div id="page-logistics" class="page hidden card"><h2>Logística</h2><p class="muted">Funcionalidade em desenvolvimento</p></div>
       </section>
 
-      <!-- LOGIN PAGE (hidden, shown on top when not authenticated) -->
-      <section id="page-login" class="page hidden" style="padding-top:40px">
-        <div class="card" style="max-width:420px;margin:0 auto">
-          <h3>Login / Sign in</h3>
-          <label>Email</label>
-          <input id="login-email" type="email" />
-          <label>Senha / Password</label>
-          <input id="login-password" type="password" />
-          <div style="margin-top:10px"><button class="btn" onclick="performLogin()">Entrar / Sign In</button></div>
-          <p id="login-msg" class="small" style="color:var(--danger)"></p>
-        </div>
-      </section>
-
+      <!-- FOOTER -->
+      <div style="height:18px"></div>
+      <div class="muted">Suporte &middot; docs@greatnexus.online</div>
     </main>
   </div>
 
+  <!-- OVERLAYS & MODALS -->
+  <div id="overlay" class="overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" id="modalRoot"></div>
+  </div>
+
+  <!-- Cookie consent -->
+  <div id="cookie-bar" class="hidden" role="region" aria-label="Cookie consent">
+    <div>
+      <div style="font-weight:700">Usamos cookies</div>
+      <div class="text-muted" style="max-width:520px">Utilizamos cookies para melhorar a experiência, analytics e funcionalidades do sistema. Ao continuar você concorda com nossa política de cookies.</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn ghost small" id="btnCookieDecline">Recusar</button>
+      <button class="btn small" id="btnCookieAccept">Aceitar</button>
+    </div>
+  </div>
+
+  <!-- Chat widget placeholder -->
+  <div id="chat-widget" style="position:fixed;right:18px;bottom:18px;background:linear-gradient(180deg,#022b3a,#043b4a);padding:12px;border-radius:12px;color:white;box-shadow:0 8px 30px rgba(2,6,23,0.6);z-index:70">
+    <div style="display:flex;gap:8px;align-items:center">
+      <div style="width:44px;height:44px;border-radius:8px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center"><i class="fas fa-comments"></i></div>
+      <div>
+        <div style="font-weight:700">Suporte</div>
+        <div class="muted" style="font-size:.85rem">Chat ao vivo</div>
+      </div>
+    </div>
+    <div style="height:8px"></div>
+    <button id="openChat" class="btn small"><i class="fas fa-comment-dots"></i> Abrir Chat</button>
+  </div>
+
+  <!-- SCRIPTS -->
   <script>
-    /*****************************************************************
-     * Great Nexus — Static Frontend Prototype (single-file)
+    /*****************************************************
+     * Great Nexus — Advanced Frontend Starter (Single File)
+     * - Production-ready scaffold for integration with Node backend
+     * - Implements: routing, JWT handling (stub), pre-signed upload flow, CSV/PDF export, cookie consent,
+     *   analytics events, multilanguage (PT/EN), Chart.js demo, modals
      *
-     * How to use:
-     * 1) Save as index.html in your frontend repo.
-     * 2) Replace API_BASE with your backend URL (see settings).
-     * 3) This file is a fully client-side SPA demo; replace stubs with real API calls.
+     * Replace API_BASE with your backend URL. Backend must implement:
+     * POST /api/auth/login -> { accessToken, refreshToken, user, tenant }
+     * POST /api/auth/refresh -> { accessToken }
+     * POST /api/documents/presign -> { url, fields? } (for S3)
+     * POST /api/payments/initiate -> { checkoutUrl or token }
+     * POST /api/analytics/events -> accept events
      *
-     * Note: For production, implement proper auth (JWT), CSRF, input validation,
-     * and move code into modular React + build system.
-     *****************************************************************/
+     * Security notes (frontend):
+     * - Store tokens in memory + refresh via secure httpOnly cookies (better) OR use short-lived access tokens + refresh token secure storage.
+     * - Never put secret keys in frontend.
+     *****************************************************/
 
     // ---------- CONFIG ----------
-    let API_BASE = ""; // set via Settings page or set here directly (e.g., https://great-erp.onrender.com)
-    const UI = { lang: 'pt' }; // 'pt' | 'en'
-
-    // localization / bilingual minimal
-    const T = {
-      pt: {
-        loginError: "Credenciais inválidas",
-        uploadSuccess: "Ficheiro enviado com sucesso",
-        uploadFail: "Falha no upload",
-      },
-      en: {
-        loginError: "Invalid credentials",
-        uploadSuccess: "File uploaded successfully",
-        uploadFail: "Upload failed",
-      }
-    };
-
-    // ---------- APP STATE ----------
+    const API_BASE = ""; // <-- set in production with backend url (or via env injection)
+    const LANGS = { pt: 'Português', en: 'English' };
+    let LANG = localStorage.getItem('gn_lang') || 'pt';
     const state = {
-      currentRoute: 'dashboard',
       token: null,
-      user: {name: 'Admin'},
-      settings: { apiBase: '', currency: 'MZN', commission: 3, irps: 20 },
-      analytics: []
+      user: null,
+      tenant: null,
+      analyticsConsent: localStorage.getItem('gn_analytics') === '1'
     };
+
+    // ---------- UTILS ----------
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+    function sanitizeText(s){ if (!s) return ''; return String(s).replace(/[<>]/g,''); }
+    function formatMoney(v){ return new Intl.NumberFormat(LANG==='pt'?'pt-PT':'en-US',{ style:'decimal', minimumFractionDigits:0 }).format(v) + ' MZN'; }
 
     // ---------- ROUTING ----------
-    function showRoute(route){
-      state.currentRoute = route;
-      document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-      const el = document.getElementById('page-' + route);
-      if (el) el.classList.remove('hidden');
-      document.getElementById('page-title').innerText = (route === 'dashboard') ? 'Dashboard' : capitalize(route);
-      window.scrollTo(0,0);
-      trackEvent('navigate', { route });
+    function showPage(name){
+      $$('[id^="page-"]').forEach(el => el.classList.add('hidden'));
+      const page = $(`#page-${name}`);
+      if (page) page.classList.remove('hidden');
+      $('#breadcrumb').innerText = page ? page.querySelector('h2')?.innerText || name : name;
+      // track nav
+      track('navigate', { page: name });
     }
 
-    // init menu
-    document.querySelectorAll('[data-route]').forEach(a=>{
-      a.addEventListener('click', (e)=>{
-        e.preventDefault();
-        const r = a.getAttribute('data-route');
-        showRoute(r);
+    // menu links
+    $$('#mainMenu a.item').forEach(a => a.addEventListener('click', e => {
+      e.preventDefault();
+      const route = a.getAttribute('data-route');
+      showPage(route);
+      $$('#mainMenu a.item').forEach(it => it.classList.remove('active'));
+      a.classList.add('active');
+    }));
+
+    // ---------- AUTH (demo login flow) ----------
+    async function loginDemo(){
+      // Example quick demo login (REPLACE with real fetch)
+      // const res = await fetch(`${API_BASE}/api/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email,password})});
+      // const data = await res.json();
+      // state.token = data.accessToken; state.user = data.user; state.tenant = data.tenant;
+      state.token = 'demo-token-abc123';
+      state.user = { name: 'Admin Demo', role: 'Super Admin' };
+      state.tenant = { name: 'Great Shop', plan: 'Starter' };
+      $('#userName').innerText = sanitizeText(state.user.name);
+      $('#tenantName').innerText = sanitizeText(state.tenant.name);
+      $('#tenantPlan').innerText = sanitizeText(state.tenant.plan);
+      showPage('dashboard');
+    }
+
+    // minimal demo hook for login button (replace with real)
+    document.addEventListener('click', (e) => {
+      if (e.target.matches('#newSaleBtn')) alert('Abrir modal nova venda (implementar)');
+      if (e.target.matches('#btnNewProduct')) openNewProductModal();
+      if (e.target.matches('#btnNewInvestment')) openNewInvestmentModal();
+      if (e.target.matches('#exportProductsCsv')) exportProductsCSV();
+      if (e.target.matches('#exportProductsCsv') || e.target.matches('#exportProductsCsv')) {}
+    });
+
+    // ---------- CHART DEMO ----------
+    let salesChart = null;
+    function renderSalesChart(){
+      const ctx = document.getElementById('chartSales7').getContext('2d');
+      const labels = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+      const data = [12000, 18500, 14000, 19500, 22000, 16000, 21000];
+      if (salesChart) salesChart.destroy();
+      salesChart = new Chart(ctx, {
+        type:'line',
+        data: { labels, datasets:[ { label:'Vendas', data, borderColor:'#06b6d4', backgroundColor:'rgba(6,182,212,0.06)', tension:0.3 } ] },
+        options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ ticks:{ color:'#9fb4c9' }, grid:{ color:'rgba(255,255,255,0.02)' } }, x:{ ticks:{ color:'#9fb4c9' } } }, responsive:true }
       });
-    });
-    document.getElementById('logout').addEventListener('click', (e)=>{ e.preventDefault(); logout(); });
-
-    // mobile nav toggle (if you later show)
-    document.getElementById('navToggle').addEventListener('click', ()=> {
-      const sb = document.getElementById('sidebar');
-      sb.style.display = (sb.style.display === 'none') ? 'flex' : 'none';
-    });
-
-    // language
-    document.getElementById('langSelect').addEventListener('change', (e) => {
-      UI.lang = e.target.value;
-      // in this prototype we don't re-render UI text automatically; it's an example
-    });
-
-    // initial
-    showRoute(state.currentRoute);
-
-    // ---------- AUTH (stubs) ----------
-    async function performLogin(){
-      const email = document.getElementById('login-email').value;
-      const password = document.getElementById('login-password').value;
-      try {
-        // NOTE: Replace with real call to /api/v1/auth/login which should return accessToken
-        // Example:
-        // const res = await fetch(API_BASE + '/api/v1/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password})});
-        // const data = await res.json();
-        // state.token = data.accessToken; state.user.name = data.user.name;
-
-        // PROTOTYPE: fake success
-        state.token = 'demo-token';
-        state.user.name = email || 'Admin';
-        document.getElementById('userName').innerText = state.user.name;
-        document.getElementById('login-msg').innerText = '';
-        showRoute('dashboard');
-      } catch (err){
-        document.getElementById('login-msg').innerText = T[UI.lang].loginError;
-      }
     }
 
-    function logout(){
-      state.token = null;
-      // in production clear storage & redirect to login
-      alert('Logged out (demo)');
+    // ---------- PRODUCTS TABLE (demo) ----------
+    const demoProducts = [
+      { sku:'PRD001', name:'Hambúrguer Frango', price:120, stock:150 },
+      { sku:'PRD002', name:'Piri-Piri 500g', price:80, stock:240 },
+    ];
+    function renderProducts(){
+      const tbody = $('#productsTbody');
+      tbody.innerHTML = demoProducts.map(p => `
+        <tr>
+          <td>${sanitizeText(p.sku)}</td>
+          <td>${sanitizeText(p.name)}</td>
+          <td>${p.price} MZN</td>
+          <td>${p.stock}</td>
+          <td><button class="btn small ghost" data-sku="${p.sku}" onclick="editProduct(event)">Editar</button></td>
+        </tr>`).join('');
     }
+    window.editProduct = (e) => { const sku = e.currentTarget.getAttribute('data-sku'); alert('Editar ' + sku); };
 
-    // ---------- UPLOAD DOCUMENT ----------
-    async function uploadDocument(){
-      const fileInput = document.getElementById('fileInput');
-      const entityId = document.getElementById('entityId').value || 'unknown';
-      const docType = document.getElementById('docType').value;
-      if (!fileInput.files.length) { alert('Selecione um ficheiro'); return; }
-      const f = fileInput.files[0];
-      // build FormData
-      const fd = new FormData();
-      fd.append('file', f);
-      fd.append('entityId', entityId);
-      fd.append('type', docType);
-      try {
-        // Replace with real API call to upload (multipart/form-data)
-        // Example:
-        // const r = await fetch(API_BASE + '/api/v1/documents/upload', { method:'POST', headers: { Authorization: 'Bearer ' + state.token }, body: fd });
-        // const d = await r.json();
-        // For demo: simulate success
-        const li = document.createElement('li');
-        li.innerText = `${f.name} — ${docType} — uploaded (demo)`;
-        document.getElementById('docsList').prepend(li);
-        alert(T[UI.lang].uploadSuccess);
-        trackEvent('document_upload', { fileName: f.name, entityId, docType });
-      } catch (err){
-        alert(T[UI.lang].uploadFail);
-      }
+    // ---------- INVESTMENTS (demo calculation) ----------
+    function openNewInvestmentModal(){
+      showModal(`<h3>Novo Investimento</h3>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label>Capital (MZN)</label>
+          <input id="modal_inv_cap" type="number" value="100000" />
+          <label>Dias úteis</label>
+          <input id="modal_inv_days" type="number" value="22" />
+          <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn ghost small" onclick="closeModal()">Cancelar</button><button class="btn small" onclick="confirmInvestment()">Confirmar</button></div>
+        </div>`);
     }
-
-    // ---------- EXPORT CSV (simple) ----------
-    function exportCSV(type){
-      // In production call backend to export large datasets; here we build a small CSV demo
-      let csv = '';
-      if (type === 'sales'){
-        csv = 'date,client,amount,status\n2025-11-05,Loja Beira,5400,Paid\n';
-      } else if (type === 'products'){
-        csv = 'sku,name,stock,price\nPRD001,Hamburger,150,120\n';
-      }
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = `${type}_${Date.now()}.csv`; a.click();
-      URL.revokeObjectURL(url);
-      trackEvent('export_csv', { type });
-    }
-
-    // ---------- INVESTMENT CALCULATION ----------
-    function simulateInvestment(){
-      const capital = parseFloat(document.getElementById('sim-capital').value || '0');
-      const days = parseInt(document.getElementById('sim-days').value || '0');
-      const dailyPercent = parseFloat(document.getElementById('sim-rate').value || '0') / 100.0;
-      const gross = capital * days * dailyPercent;
-      const irps = (state.settings.irps || 20) / 100.0;
-      const tax = gross * irps;
+    async function confirmInvestment(){
+      const cap = Number($('#modal_inv_cap').value || 0);
+      const days = Number($('#modal_inv_days').value || 0);
+      const rate = 0.003; // 0.3% per day
+      const gross = cap * days * rate;
+      const tax = gross * 0.20;
       const net = gross - tax;
-      const finalBalance = capital + net;
-      const html = `
-        <p>Rendimento bruto: ${formatMoney(gross)}</p>
-        <p>IRPS (${(irps*100).toFixed(1)}%): ${formatMoney(tax)}</p>
-        <p><strong>Rendimento líquido: ${formatMoney(net)}</strong></p>
-        <p>Saldo final: ${formatMoney(finalBalance)}</p>
-      `;
-      document.getElementById('sim-result').innerHTML = html;
-      trackEvent('investment_simulate', { capital, days, dailyPercent });
+      // in real: POST /api/mola/investments
+      closeModal();
+      alert(`Investimento efetuado. Rendimento líquido: ${formatMoney(net)}`);
+      track('investment_created', { cap, days, gross, tax, net });
     }
 
-    function formatMoney(v){ return (Math.round(v*100)/100).toLocaleString() + ' MZN'; }
+    // ---------- MODAL HELPERS ----------
+    function showModal(html){
+      $('#overlay').style.display = 'flex';
+      $('#modalRoot').innerHTML = html;
+      $('#overlay').setAttribute('aria-hidden','false');
+    }
+    function closeModal(){
+      $('#overlay').style.display = 'none';
+      $('#modalRoot').innerHTML = '';
+      $('#overlay').setAttribute('aria-hidden','true');
+    }
+    document.getElementById('overlay').addEventListener('click', (e) => {
+      if (e.target.id === 'overlay') closeModal();
+    });
 
-    // ---------- INVESTMENT WITHDRAW (stub) ----------
-    function withdrawInvestment(id){
-      if (!confirm('Confirm withdraw for ' + id + ' ?')) return;
-      // call /api/v1/mola/investments/withdraw
-      alert('Withdraw request created (demo).');
-      trackEvent('investment_withdraw', { id });
+    // ---------- FILE UPLOAD (presigned S3 flow) ----------
+    // Flow: 1) call backend POST /api/documents/presign { filename, contentType, entityId } -> returns { url, fields? }
+    // 2) use fetch/axios to PUT the file to the returned url or POST with fields (depending S3 POST or PUT)
+    async function uploadFile(file, entityId, docType='generic'){
+      if (!file) throw new Error('file missing');
+      // request presign
+      try {
+        const token = state.token;
+        const res = await fetch(`${API_BASE}/api/documents/presign`, {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json', 'Authorization': token ? `Bearer ${token}` : '' },
+          body: JSON.stringify({ filename: file.name, contentType: file.type, entityId, docType })
+        });
+        if (!res.ok) throw new Error('Presign failed');
+        const data = await res.json();
+        // data: { url, method:'PUT'|'POST', fields? }
+        if (data.method === 'PUT') {
+          await fetch(data.url, { method:'PUT', headers: { 'Content-Type': file.type }, body: file });
+        } else {
+          // POST form data (presigned POST)
+          const fd = new FormData();
+          Object.entries(data.fields||{}).forEach(([k,v]) => fd.append(k,v));
+          fd.append('file', file);
+          await fetch(data.url, { method:'POST', body: fd });
+        }
+        // notify backend metadata saved (optional)
+        await fetch(`${API_BASE}/api/documents/record`, { method:'POST', headers: {'Content-Type':'application/json','Authorization': token?`Bearer ${token}`:''}, body: JSON.stringify({ url: data.objectUrl || data.url, filename: file.name, entityId, docType })});
+        track('document_upload',{ filename:file.name, entityId, docType });
+        return { ok:true };
+      } catch(err){
+        console.error('uploadFile error',err);
+        return { ok:false, error: String(err) };
+      }
     }
 
-    // ---------- PAYMENT INITIATION (stub) ----------
-    async function initiatePayment(method, amount, reference){
-      // Example method: 'mpesa' | 'stripe' | 'paypal' | 'mola'
-      // Call backend to initiate and receive payment token or redirect URL
-      console.log('Initiate payment', method, amount, reference);
-      trackEvent('payment_initiate', { method, amount, reference });
-      // In real flow: open checkout or show QR
-      alert('Pagamento iniciado (demo). Method: ' + method);
+    // ---------- EXPORT CSV / PDF ----------
+    function downloadCSV(filename, rows, header){
+      const csv = [header.join(','), ...rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(','))].join('\n');
+      const blob = new Blob([csv], { type:'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+      a.remove(); URL.revokeObjectURL(url);
+      track('export_csv',{ filename });
+    }
+    function exportProductsCSV(){
+      const header = ['sku','name','price','stock'];
+      const rows = demoProducts.map(p => [p.sku,p.name,p.price,p.stock]);
+      downloadCSV(`products_${Date.now()}.csv`, rows, header);
     }
 
-    // ---------- B2B actions ----------
-    function openB2BRegister(){
-      alert('Open B2B registration form (demo).');
-    }
-    function contactSeller(){
-      alert('Open contact modal to seller (demo).');
+    // PDF: simple HTML print view (server-side recommended for production)
+    function exportPDF(){
+      window.print();
+      track('export_pdf',{ from:'dashboard' });
     }
 
-    // ---------- Admin settings ----------
-    function saveSystemSettings(){
-      const comm = parseFloat(document.getElementById('sys_commission').value || '0');
-      const irps = parseFloat(document.getElementById('sys_irps').value || '20');
-      state.settings.commission = comm; state.settings.irps = irps;
-      alert('Settings saved (demo)');
-      trackEvent('settings_update', { commission:comm, irps });
-    }
-    function saveSettings(){
-      const base = document.getElementById('apiBaseInput').value;
-      const cur = document.getElementById('currencySelect').value;
-      state.settings.apiBase = base; state.settings.currency = cur; API_BASE = base;
-      alert('Settings saved. API_BASE = ' + API_BASE);
-    }
-
-    // ---------- small helpers ----------
-    function capitalize(s){ return s.charAt(0).toUpperCase() + s.slice(1) }
-
-    // ---------- Analytics (tracking stub) ----------
-    function trackEvent(type, payload){
-      const ev = { ts: new Date().toISOString(), type, payload, user: state.user.name };
-      state.analytics.push(ev);
-      // In prod: send to /api/v1/analytics/events
+    // ---------- TRACKING / ANALYTICS ----------
+    function track(event, payload = {}){
+      const ev = { ts: new Date().toISOString(), event, payload, user: state.user?.name || 'anon', tenant: state.tenant?.name || null };
+      if (state.analyticsConsent) {
+        // send to backend
+        fetch(`${API_BASE}/api/analytics/events`, { method:'POST', headers:{'Content-Type':'application/json','Authorization': state.token ? `Bearer ${state.token}` : ''}, body: JSON.stringify(ev) }).catch(()=>{/*noop*/});
+      }
       console.log('TRACK', ev);
     }
 
-    // ---------- DOCUMENTS / FILES demo list ----------
-    (function seedDocs(){
-      const docs = ['inv-1001.pdf','contract-empresaA.pdf'];
-      const list = document.getElementById('docsList');
-      docs.forEach(d => { const li = document.createElement('li'); li.innerText = d; list.appendChild(li); });
-    })();
-
-    // ---------- simple UI actions for create entities (stubs) ----------
-    function openNewSale(){ alert('Open new sale modal (demo)'); trackEvent('open_new_sale'); }
-    function openNewProduct(){ alert('Open new product modal (demo)'); trackEvent('open_new_product'); }
-    function openInvest(){ alert('Open invest modal (demo)'); trackEvent('open_invest'); }
-
-    // ---------- EXPORT: PDF (quick print) ----------
-    function exportToPDF(title){
-      // This is a simple method: print the page or a selection. In prod generate server-side PDF.
-      document.title = title || 'Great Nexus Report';
-      window.print();
-      trackEvent('export_pdf', { title });
+    // ---------- COOKIE CONSENT ----------
+    function showCookieBar(){
+      if (localStorage.getItem('gn_cookie_shown')) return;
+      $('#cookie-bar').classList.remove('hidden');
     }
-
-    // ---------- GA / external analytics explicit consent (demo) ----------
-    function consentAnalytics(on){
-      if(on) alert('Analytics enabled (demo)');
-      else alert('Analytics disabled (demo)');
-    }
-
-    // ---------- ONLOAD (simulate user logged) ----------
-    document.addEventListener('DOMContentLoaded', () => {
-      // initialize settings
-      API_BASE = '';
-      state.settings.apiBase = API_BASE;
-      document.getElementById('apiBaseInput').value = API_BASE;
-      document.getElementById('currencySelect').value = state.settings.currency;
-      // set initial user
-      document.getElementById('userName').innerText = state.user.name;
-      // show login if not token (for demo we leave token set)
-      if (!state.token){ showRoute('page-login'); /* but here default shows dashboard */ }
-      // attach analytics basic events
-      document.getElementById('global-search').addEventListener('input', e=>{ trackEvent('search', { q: e.target.value }); });
+    $('#btnCookieAccept').addEventListener('click', () => {
+      localStorage.setItem('gn_cookie_shown','1');
+      localStorage.setItem('gn_analytics','1');
+      state.analyticsConsent = true;
+      $('#cookie-bar').classList.add('hidden');
+      track('cookie_accepted',{ });
+    });
+    $('#btnCookieDecline').addEventListener('click', () => {
+      localStorage.setItem('gn_cookie_shown','1');
+      localStorage.setItem('gn_analytics','0');
+      state.analyticsConsent = false;
+      $('#cookie-bar').classList.add('hidden');
     });
 
-    // Expose API for debugging in console
-    window.GNX = { state, showRoute, exportCSV, simulateInvestment, initiatePayment, uploadDocument };
+    // ---------- INIT ----------
+    async function init(){
+      document.getElementById('year').innerText = new Date().getFullYear();
+      renderSalesChart();
+      renderProducts();
+      // demo: set user (in production redirect to login if not authenticated)
+      await loginDemo();
+      // cookie
+      showCookieBar();
+      // wire actions
+      $('#exportPdfBtn').addEventListener('click', exportPDF);
+      $('#exportProductsCsv').addEventListener('click', exportProductsCSV);
+      // investments
+      $('#btnNewInvestment').addEventListener('click', openNewInvestmentModal);
+      $('#btnNewProduct').addEventListener('click', openNewProductModal);
+      // chart resize on window
+      window.addEventListener('resize', () => salesChart && salesChart.resize());
+      // track initial page
+      track('app_loaded', { lang: LANG });
+    }
+    init();
+
+    // ---------- NEW PRODUCT MODAL ----------
+    function openNewProductModal(){
+      showModal(`<div style="display:flex;flex-direction:column;gap:8px">
+        <h3>Novo Produto</h3>
+        <label>SKU</label><input id="modal_sku" />
+        <label>Nome</label><input id="modal_name" />
+        <label>Preço (MZN)</label><input id="modal_price" type="number" />
+        <label>Stock</label><input id="modal_stock" type="number" />
+        <div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn ghost small" onclick="closeModal()">Cancelar</button><button class="btn small" onclick="saveNewProduct()">Salvar</button></div>
+      </div>`);
+    }
+    function saveNewProduct(){
+      const sku = $('#modal_sku').value, name = $('#modal_name').value, price = Number($('#modal_price').value||0), stock = Number($('#modal_stock').value||0);
+      demoProducts.push({ sku, name, price, stock });
+      closeModal();
+      renderProducts();
+      track('product_created',{ sku,name,price,stock });
+    }
+
+    // ---------- SIMPLE CHAT OPEN ----------
+    $('#openChat').addEventListener('click', () => {
+      showModal(`<div style="display:flex;flex-direction:column;gap:8px"><h3>Chat de Suporte</h3><div style="height:260px;border:1px solid rgba(255,255,255,0.03);border-radius:8px;padding:8px;overflow:auto" id="chatBox"></div>
+        <div style="display:flex;gap:8px"><input id="chatMsg" placeholder="Escreva uma mensagem..." style="flex:1" /><button class="btn small" onclick="sendChat()">Enviar</button></div></div>`);
+    });
+    function sendChat(){ const msg = $('#chatMsg').value; if (!msg) return; const box = $('#chatBox'); const p = document.createElement('div'); p.style.margin='6px 0'; p.innerText = 'Você: ' + msg; box.appendChild(p); $('#chatMsg').value=''; track('chat_message',{ msg }); }
+
+    // ---------- LOGOUT -->
+    $('#btnLogout').addEventListener('click', () => {
+      // In production: call /auth/logout to revoke refresh tokens, clear cookies
+      state.token = null; state.user = null; state.tenant = null;
+      alert('Sessão terminada (demo). Implementar logout real no backend.');
+    });
+
+    // expose for debugging
+    window.GN = { state, API_BASE, showModal, closeModal, uploadFile, track };
   </script>
+
+  <noscript>
+    <div style="position:fixed;bottom:12px;left:12px;right:12px;background:#141a23;padding:12px;border-radius:8px;color:#fff">
+      Este aplicativo requer JavaScript para funcionar corretamente.
+    </div>
+  </noscript>
 </body>
 </html>
