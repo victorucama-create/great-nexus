@@ -7,7 +7,8 @@
     "dev": "node server.js",
     "start": "node server.js",
     "build": "echo 'No build step needed for Node.js'",
-    "install:all": "npm install"
+    "install:all": "npm install",
+    "db:init": "node init-db.js"
   },
   "dependencies": {
     "express": "^4.18.2",
