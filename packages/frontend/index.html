@@ -1,721 +1,639 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Great Nexus - Ecossistema Empresarial Inteligente</title>
-    <link rel="stylesheet" href="src/styles/main.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Great Nexus — Painel</title>
+  <meta name="description" content="Great Nexus - Ecossistema Empresarial Inteligente" />
+  <style>
+    /* ---------- BASIC RESET & THEME ---------- */
+    :root{
+      --primary:#007BFF;
+      --dark:#0b2447;
+      --muted:#6b7280;
+      --bg:#f3f4f6;
+      --card:#ffffff;
+      --success:#16a34a;
+      --danger:#dc2626;
+      --sidebar-width: 280px;
+      --max-width:1200px;
+      --mono: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:var(--mono);background:var(--bg);color:#111}
+    a{color:inherit;text-decoration:none}
+    button{cursor:pointer}
+    /* ---------- LAYOUT ---------- */
+    .app{display:flex;height:100vh;overflow:hidden}
+    aside.sidebar{
+      width:var(--sidebar-width);
+      background:linear-gradient(180deg,var(--primary),#0056d6);
+      color:white;
+      display:flex;flex-direction:column;
+      box-shadow: 2px 0 6px rgba(0,0,0,0.08);
+    }
+    .sidebar .logo{padding:20px;font-weight:700;font-size:1.1rem}
+    .menu{flex:1;padding:10px 8px;overflow:auto}
+    .menu a{display:block;padding:10px 12px;border-radius:6px;margin:6px 4px;color:white;opacity:0.95}
+    .menu a:hover{background:rgba(255,255,255,0.06)}
+    .menu .section-title{opacity:0.85;font-size:0.85rem;margin:12px 8px;color:rgba(255,255,255,0.9)}
+    .sidebar .footer{padding:12px;font-size:12px;text-align:center;border-top:1px solid rgba(255,255,255,0.06)}
+    main.content{flex:1;overflow:auto;padding:20px}
+    header.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    .search{max-width:420px;flex:1;margin-left:10px}
+    .card{background:var(--card);padding:14px;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,0.04);margin-bottom:12px}
+    .grid{display:grid;gap:12px}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid #eef2f7;text-align:left}
+    th{background:#f8fafc}
+    .btn{display:inline-block;padding:8px 12px;border-radius:6px;background:var(--primary);color:white;border:none}
+    .btn.secondary{background:#6b7280}
+    .small{font-size:0.9rem}
+    input[type="text"],input[type="email"],input[type="password"],select,textarea{
+      padding:8px;border-radius:6px;border:1px solid #e6eef8;width:100%;
+    }
+    .row{display:flex;gap:12px}
+    .col{flex:1}
+    .hidden{display:none}
+    /* responsive */
+    @media (max-width:900px){
+      aside.sidebar{display:none}
+      .app.mobile{display:block}
+      .mobile-header{display:flex;align-items:center;gap:8px;padding:10px;background:#fff}
+    }
+    /* badges */
+    .badge{padding:6px 8px;border-radius:20px;background:#eef2ff;color:var(--primary);font-weight:600;font-size:.85rem;display:inline-block}
+    /* file list */
+    .file-list{list-style:none;padding:0;margin:0}
+    .file-list li{padding:8px;border-bottom:1px dashed #eef2f7}
+    pre{background:#0b1220;color:#e6f0ff;padding:12px;border-radius:6px;overflow:auto}
+  </style>
 </head>
 <body>
-    <div id="app">
-        <!-- Loading Screen -->
-        <div id="loading-screen" class="loading-screen">
-            <div class="loading-content">
-                <div class="logo">
-                    <i class="fas fa-network-wired"></i>
-                    <span>Great Nexus</span>
+  <div id="app-root" class="app" role="application" aria-label="Great Nexus App">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="logo">Great Nexus</div>
+      <div class="menu" id="menu">
+        <div class="section-title">Main</div>
+        <a href="#" data-route="dashboard">Dashboard</a>
+        <a href="#" data-route="sales">Vendas / Sales</a>
+        <a href="#" data-route="inventory">Inventário / Inventory</a>
+        <a href="#" data-route="mrp">MRP / Production</a>
+        <a href="#" data-route="crm">CRM</a>
+        <a href="#" data-route="greatmola">Great Mola</a>
+        <a href="#" data-route="b2b">B2B Marketplace</a>
+        <a href="#" data-route="logistics">Logística</a>
+        <a href="#" data-route="investments">Investimentos</a>
+        <div class="section-title">Admin</div>
+        <a href="#" data-route="superadmin">Super Admin</a>
+        <a href="#" data-route="documents">Documentos</a>
+        <a href="#" data-route="settings">Settings</a>
+        <div class="section-title">Support</div>
+        <a href="#" id="logout">Logout</a>
+      </div>
+      <div class="footer">Powered by Great Pollo Technologies</div>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="content" id="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button id="navToggle" class="btn secondary hidden">Menu</button>
+          <h2 id="page-title">Dashboard</h2>
+          <div class="search">
+            <input type="text" id="global-search" placeholder="Pesquisar / Search..." />
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center">
+          <div id="userArea" class="small">Olá, <strong id="userName">Admin</strong></div>
+          <select id="langSelect" title="Language" aria-label="Language">
+            <option value="pt">PT</option>
+            <option value="en">EN</option>
+          </select>
+        </div>
+      </header>
+
+      <!-- PAGES / TEMPLATES -->
+      <section id="page-dashboard" class="page">
+        <div class="card">
+          <div class="row">
+            <div class="col">
+              <h3>Resumo Financeiro / Financial Summary</h3>
+              <div class="grid cols-3" style="margin-top:8px">
+                <div class="card">
+                  <div class="small">Vendas Mensais</div>
+                  <h2>245.700 MZN</h2>
                 </div>
-                <div class="loading-spinner"></div>
-                <p>Inicializando ecossistema empresarial...</p>
+                <div class="card">
+                  <div class="small">Caixa</div>
+                  <h2>75.400 MZN</h2>
+                </div>
+                <div class="card">
+                  <div class="small">Investimentos (Mola)</div>
+                  <h2>125.200 MZN</h2>
+                </div>
+              </div>
             </div>
+            <div class="col">
+              <h3>Atividades Recentes / Recent</h3>
+              <ul class="file-list" id="recent-activities">
+                <li>05/11/2025 — Fatura #INV-1001 paga</li>
+                <li>03/11/2025 — Nova empresa cadastrada</li>
+              </ul>
+            </div>
+          </div>
         </div>
 
-        <!-- Auth Screens -->
-        <div id="auth-screens">
-            <!-- Login Screen -->
-            <div id="login-screen" class="auth-screen">
-                <div class="auth-container">
-                    <div class="auth-header">
-                        <div class="logo">
-                            <i class="fas fa-network-wired"></i>
-                            <span>Great Nexus</span>
-                        </div>
-                        <h1>Bem-vindo de volta</h1>
-                        <p>Entre na sua conta para continuar</p>
-                    </div>
-
-                    <form id="login-form" class="auth-form">
-                        <div class="form-group">
-                            <label for="login-email">Email</label>
-                            <input type="email" id="login-email" required placeholder="seu@email.com">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="login-password">Password</label>
-                            <input type="password" id="login-password" required placeholder="Sua password">
-                        </div>
-
-                        <div class="form-options">
-                            <label class="checkbox">
-                                <input type="checkbox" id="remember-me">
-                                <span>Lembrar-me</span>
-                            </label>
-                            <a href="#" class="forgot-password">Esqueceu a password?</a>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary btn-full">
-                            <i class="fas fa-sign-in-alt"></i>
-                            Entrar
-                        </button>
-
-                        <div class="demo-section">
-                            <div class="divider">ou</div>
-                            <button type="button" id="demo-login-btn" class="btn btn-outline btn-full">
-                                <i class="fas fa-rocket"></i>
-                                Entrar com Demo
-                            </button>
-                        </div>
-                    </form>
-
-                    <div class="auth-footer">
-                        <p>Não tem uma conta? <a href="#" id="show-register">Registe-se</a></p>
-                    </div>
-                </div>
-
-                <div class="auth-background">
-                    <div class="background-content">
-                        <h2>Ecossistema Empresarial Inteligente</h2>
-                        <p>Integre ERP, CRM, MRP, B2B Marketplace e Fintech numa única plataforma</p>
-                        <div class="features">
-                            <div class="feature">
-                                <i class="fas fa-cube"></i>
-                                <span>Gestão Completa</span>
-                            </div>
-                            <div class="feature">
-                                <i class="fas fa-chart-line"></i>
-                                <span>Business Intelligence</span>
-                            </div>
-                            <div class="feature">
-                                <i class="fas fa-handshake"></i>
-                                <span>Marketplace B2B</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div class="card">
+          <h3>Indicadores / KPIs</h3>
+          <div class="row" style="margin-top:8px">
+            <div class="col">
+              <h4>Top Products</h4>
+              <ol id="top-products">
+                <li>Hambúrguer de Frango</li>
+                <li>Piri-Piri 500g</li>
+              </ol>
             </div>
-
-            <!-- Register Screen -->
-            <div id="register-screen" class="auth-screen hidden">
-                <div class="auth-container">
-                    <div class="auth-header">
-                        <div class="logo">
-                            <i class="fas fa-network-wired"></i>
-                            <span>Great Nexus</span>
-                        </div>
-                        <h1>Criar Nova Conta</h1>
-                        <p>Comece sua jornada empresarial connosco</p>
-                    </div>
-
-                    <form id="register-form" class="auth-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="register-name">Nome Completo</label>
-                                <input type="text" id="register-name" required placeholder="Seu nome">
-                            </div>
-                            <div class="form-group">
-                                <label for="register-company">Nome da Empresa</label>
-                                <input type="text" id="register-company" required placeholder="Nome da empresa">
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="register-email">Email</label>
-                            <input type="email" id="register-email" required placeholder="seu@empresa.com">
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="register-password">Password</label>
-                                <input type="password" id="register-password" required placeholder="Mínimo 8 caracteres">
-                            </div>
-                            <div class="form-group">
-                                <label for="register-confirm-password">Confirmar Password</label>
-                                <input type="password" id="register-confirm-password" required placeholder="Repita a password">
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="register-country">País</label>
-                                <select id="register-country" required>
-                                    <option value="">Selecione o país</option>
-                                    <option value="MZ" selected>Moçambique</option>
-                                    <option value="AO">Angola</option>
-                                    <option value="PT">Portugal</option>
-                                    <option value="BR">Brasil</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="register-currency">Moeda</label>
-                                <select id="register-currency" required>
-                                    <option value="">Selecione a moeda</option>
-                                    <option value="MZN" selected>MZN - Metical</option>
-                                    <option value="USD">USD - Dólar Americano</option>
-                                    <option value="EUR">EUR - Euro</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-options">
-                            <label class="checkbox">
-                                <input type="checkbox" id="accept-terms" required>
-                                <span>Concordo com os <a href="#">Termos de Serviço</a> e <a href="#">Política de Privacidade</a></span>
-                            </label>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary btn-full">
-                            <i class="fas fa-user-plus"></i>
-                            Criar Conta
-                        </button>
-                    </form>
-
-                    <div class="auth-footer">
-                        <p>Já tem uma conta? <a href="#" id="show-login">Entrar</a></p>
-                    </div>
-                </div>
-
-                <div class="auth-background">
-                    <div class="background-content">
-                        <h2>Comece sua Transformação Digital</h2>
-                        <p>Tudo o que sua empresa precisa num único ecossistema integrado</p>
-                        <div class="features">
-                            <div class="feature">
-                                <i class="fas fa-store"></i>
-                                <span>ERP & Vendas</span>
-                            </div>
-                            <div class="feature">
-                                <i class="fas fa-industry"></i>
-                                <span>Produção (MRP)</span>
-                            </div>
-                            <div class="feature">
-                                <i class="fas fa-wallet"></i>
-                                <span>Great Mola</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="col">
+              <h4>Atividades do B2B</h4>
+              <p>Pedidos B2B esta semana: <strong>12</strong></p>
+              <p>Transações fechadas: <strong>8</strong></p>
             </div>
+            <div class="col">
+              <h4>Últimos Logs</h4>
+              <pre id="logbox">No recent logs</pre>
+            </div>
+          </div>
         </div>
+      </section>
 
-        <!-- Main Application -->
-        <div id="main-app" class="main-app hidden">
-            <!-- Sidebar -->
-            <nav class="sidebar">
-                <div class="sidebar-header">
-                    <div class="logo">
-                        <i class="fas fa-network-wired"></i>
-                        <span>Great Nexus</span>
-                    </div>
-                    <button id="sidebar-toggle" class="sidebar-toggle">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                </div>
-
-                <div class="sidebar-content">
-                    <div class="tenant-info">
-                        <div class="tenant-avatar">
-                            <i class="fas fa-building"></i>
-                        </div>
-                        <div class="tenant-details">
-                            <span class="tenant-name" id="current-tenant">Minha Empresa</span>
-                            <span class="tenant-plan">Plano Starter</span>
-                        </div>
-                    </div>
-
-                    <ul class="sidebar-menu">
-                        <li class="menu-item active" data-module="dashboard">
-                            <a href="#">
-                                <i class="fas fa-home"></i>
-                                <span>Dashboard</span>
-                            </a>
-                        </li>
-                        
-                        <li class="menu-section">ERP & Gestão</li>
-                        <li class="menu-item" data-module="products">
-                            <a href="#">
-                                <i class="fas fa-cube"></i>
-                                <span>Produtos</span>
-                            </a>
-                        </li>
-                        <li class="menu-item" data-module="sales">
-                            <a href="#">
-                                <i class="fas fa-shopping-cart"></i>
-                                <span>Vendas</span>
-                            </a>
-                        </li>
-                        <li class="menu-item" data-module="inventory">
-                            <a href="#">
-                                <i class="fas fa-warehouse"></i>
-                                <span>Inventário</span>
-                            </a>
-                        </li>
-                        <li class="menu-item" data-module="invoices">
-                            <a href="#">
-                                <i class="fas fa-file-invoice"></i>
-                                <span>Faturas</span>
-                            </a>
-                        </li>
-
-                        <li class="menu-section">Produção</li>
-                        <li class="menu-item" data-module="mrp">
-                            <a href="#">
-                                <i class="fas fa-industry"></i>
-                                <span>Planeamento (MRP)</span>
-                            </a>
-                        </li>
-
-                        <li class="menu-section">Great Mola</li>
-                        <li class="menu-item" data-module="investments">
-                            <a href="#">
-                                <i class="fas fa-chart-line"></i>
-                                <span>Investimentos</span>
-                            </a>
-                        </li>
-                        <li class="menu-item" data-module="wallet">
-                            <a href="#">
-                                <i class="fas fa-wallet"></i>
-                                <span>Carteira</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="sidebar-footer">
-                    <div class="user-menu">
-                        <div class="user-avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="user-details">
-                            <span class="user-name" id="current-user">Utilizador</span>
-                            <span class="user-role">Administrador</span>
-                        </div>
-                        <div class="user-actions">
-                            <button id="user-menu-toggle">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="user-dropdown" class="user-dropdown hidden">
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-cog"></i>
-                            Configurações
-                        </a>
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-building"></i>
-                            Minha Empresa
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" id="logout-btn" class="dropdown-item">
-                            <i class="fas fa-sign-out-alt"></i>
-                            Terminar Sessão
-                        </a>
-                    </div>
-                </div>
-            </nav>
-
-            <!-- Main Content -->
-            <main class="main-content">
-                <!-- Header -->
-                <header class="content-header">
-                    <div class="header-left">
-                        <h1 id="page-title">Dashboard</h1>
-                        <div class="breadcrumb">
-                            <span>Great Nexus</span>
-                            <i class="fas fa-chevron-right"></i>
-                            <span id="breadcrumb-current">Dashboard</span>
-                        </div>
-                    </div>
-
-                    <div class="header-right">
-                        <div class="header-actions">
-                            <button class="header-btn" id="notifications-btn">
-                                <i class="fas fa-bell"></i>
-                                <span class="notification-badge">3</span>
-                            </button>
-                            <button class="header-btn" id="help-btn">
-                                <i class="fas fa-question-circle"></i>
-                            </button>
-                        </div>
-
-                        <div class="quick-stats">
-                            <div class="stat-item">
-                                <span class="stat-label">Vendas Hoje</span>
-                                <span class="stat-value">12.540 MZN</span>
-                            </div>
-                        </div>
-                    </div>
-                </header>
-
-                <!-- Content Area -->
-                <div class="content-area">
-                    <!-- Dashboard Module -->
-                    <div id="dashboard-module" class="module-content">
-                        <div class="dashboard-grid">
-                            <!-- Stats Cards -->
-                            <div class="stats-grid">
-                                <div class="stat-card">
-                                    <div class="stat-icon primary">
-                                        <i class="fas fa-chart-line"></i>
-                                    </div>
-                                    <div class="stat-info">
-                                        <h3 id="sales-month">125.840 MZN</h3>
-                                        <p>Vendas do Mês</p>
-                                        <span class="stat-trend positive">
-                                            <i class="fas fa-arrow-up"></i>
-                                            12.5%
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div class="stat-card">
-                                    <div class="stat-icon success">
-                                        <i class="fas fa-shopping-cart"></i>
-                                    </div>
-                                    <div class="stat-info">
-                                        <h3 id="total-orders">42</h3>
-                                        <p>Novos Pedidos</p>
-                                        <span class="stat-trend positive">
-                                            <i class="fas fa-arrow-up"></i>
-                                            8.2%
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div class="stat-card">
-                                    <div class="stat-icon warning">
-                                        <i class="fas fa-cube"></i>
-                                    </div>
-                                    <div class="stat-info">
-                                        <h3 id="total-products">156</h3>
-                                        <p>Produtos em Stock</p>
-                                        <span class="stat-trend negative">
-                                            <i class="fas fa-arrow-down"></i>
-                                            3.1%
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div class="stat-card">
-                                    <div class="stat-icon info">
-                                        <i class="fas fa-wallet"></i>
-                                    </div>
-                                    <div class="stat-info">
-                                        <h3 id="mola-balance">89.250 MZN</h3>
-                                        <p>Great Mola</p>
-                                        <span class="stat-trend positive">
-                                            <i class="fas fa-arrow-up"></i>
-                                            5.7%
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Charts and Recent Activity -->
-                            <div class="content-grid">
-                                <div class="chart-container">
-                                    <div class="card">
-                                        <div class="card-header">
-                                            <h3>Vendas dos Últimos 7 Dias</h3>
-                                        </div>
-                                        <div class="card-body">
-                                            <div id="sales-chart" class="chart-placeholder">
-                                                <canvas id="salesChart"></canvas>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="activity-container">
-                                    <div class="card">
-                                        <div class="card-header">
-                                            <h3>Atividade Recente</h3>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="activity-list" id="recent-activities">
-                                                <!-- Activities will be loaded here -->
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Quick Actions -->
-                            <div class="quick-actions-grid">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h3>Ações Rápidas</h3>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="actions-grid">
-                                            <button class="action-btn" data-action="new-product">
-                                                <i class="fas fa-cube"></i>
-                                                <span>Add Produto</span>
-                                            </button>
-                                            <button class="action-btn" data-action="new-invoice">
-                                                <i class="fas fa-file-invoice"></i>
-                                                <span>Criar Fatura</span>
-                                            </button>
-                                            <button class="action-btn" data-action="new-investment">
-                                                <i class="fas fa-chart-line"></i>
-                                                <span>Investir</span>
-                                            </button>
-                                            <button class="action-btn" data-action="reports">
-                                                <i class="fas fa-chart-bar"></i>
-                                                <span>Relatórios</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Products Module -->
-                    <div id="products-module" class="module-content hidden">
-                        <div class="module-header">
-                            <h2>Gestão de Produtos</h2>
-                            <div class="header-actions">
-                                <button class="btn btn-outline" id="export-products">
-                                    <i class="fas fa-download"></i>
-                                    Exportar
-                                </button>
-                                <button class="btn btn-primary" id="new-product-btn">
-                                    <i class="fas fa-plus"></i>
-                                    Novo Produto
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="products-container">
-                            <div class="table-container">
-                                <div class="table-toolbar">
-                                    <div class="search-box">
-                                        <i class="fas fa-search"></i>
-                                        <input type="text" id="product-search" placeholder="Pesquisar produtos...">
-                                    </div>
-                                    <div class="table-actions">
-                                        <button class="btn btn-sm btn-outline" id="refresh-products">
-                                            <i class="fas fa-sync-alt"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="table-wrapper">
-                                    <table class="data-table">
-                                        <thead>
-                                            <tr>
-                                                <th>SKU</th>
-                                                <th>Nome</th>
-                                                <th>Preço</th>
-                                                <th>Stock</th>
-                                                <th>Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="products-table-body">
-                                            <!-- Products will be loaded here -->
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div class="table-footer">
-                                    <div class="table-pagination" id="products-pagination">
-                                        <!-- Pagination will be loaded here -->
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Investments Module -->
-                    <div id="investments-module" class="module-content hidden">
-                        <div class="module-header">
-                            <h2>Great Mola - Investimentos</h2>
-                            <div class="header-actions">
-                                <button class="btn btn-primary" id="new-investment-btn">
-                                    <i class="fas fa-plus"></i>
-                                    Novo Investimento
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="investments-container">
-                            <div class="investments-stats">
-                                <div class="investment-stat-card">
-                                    <div class="stat-value" id="total-invested">0 MZN</div>
-                                    <div class="stat-label">Total Investido</div>
-                                </div>
-                                <div class="investment-stat-card">
-                                    <div class="stat-value" id="total-returns">0 MZN</div>
-                                    <div class="stat-label">Retornos</div>
-                                </div>
-                                <div class="investment-stat-card">
-                                    <div class="stat-value" id="active-investments">0</div>
-                                    <div class="stat-label">Investimentos Ativos</div>
-                                </div>
-                            </div>
-
-                            <div class="investments-list">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h3>Meus Investimentos</h3>
-                                    </div>
-                                    <div class="card-body">
-                                        <div id="investments-list-container">
-                                            <!-- Investments will be loaded here -->
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Other modules -->
-                    <div id="sales-module" class="module-content hidden">
-                        <div class="module-header">
-                            <h2>Gestão de Vendas</h2>
-                        </div>
-                        <div class="empty-state">
-                            <i class="fas fa-shopping-cart"></i>
-                            <h3>Módulo de Vendas</h3>
-                            <p>Em desenvolvimento - breve disponível</p>
-                        </div>
-                    </div>
-
-                    <div id="inventory-module" class="module-content hidden">
-                        <div class="module-header">
-                            <h2>Gestão de Inventário</h2>
-                        </div>
-                        <div class="empty-state">
-                            <i class="fas fa-warehouse"></i>
-                            <h3>Módulo de Inventário</h3>
-                            <p>Em desenvolvimento - breve disponível</p>
-                        </div>
-                    </div>
-
-                    <div id="mrp-module" class="module-content hidden">
-                        <div class="module-header">
-                            <h2>Planeamento de Produção (MRP)</h2>
-                        </div>
-                        <div class="empty-state">
-                            <i class="fas fa-industry"></i>
-                            <h3>Módulo MRP</h3>
-                            <p>Em desenvolvimento - breve disponível</p>
-                        </div>
-                    </div>
-
-                    <div id="wallet-module" class="module-content hidden">
-                        <div class="module-header">
-                            <h2>Carteira Great Mola</h2>
-                        </div>
-                        <div class="empty-state">
-                            <i class="fas fa-wallet"></i>
-                            <h3>Módulo Carteira</h3>
-                            <p>Em desenvolvimento - breve disponível</p>
-                        </div>
-                    </div>
-                </div>
-            </main>
-        </div>
-
-        <!-- Modals -->
-        <div id="modals-container">
-            <!-- New Product Modal -->
-            <div id="new-product-modal" class="modal hidden">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Novo Produto</h3>
-                        <button class="modal-close" data-modal="new-product-modal">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="new-product-form">
-                            <div class="form-group">
-                                <label for="product-sku">SKU *</label>
-                                <input type="text" id="product-sku" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="product-name">Nome do Produto *</label>
-                                <input type="text" id="product-name" required>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="product-price">Preço (MZN) *</label>
-                                    <input type="number" id="product-price" step="0.01" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="product-stock">Stock Inicial *</label>
-                                    <input type="number" id="product-stock" required>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-outline" data-modal="new-product-modal">Cancelar</button>
-                        <button class="btn btn-primary" id="save-product">Guardar Produto</button>
-                    </div>
-                </div>
+      <!-- SALES PAGE -->
+      <section id="page-sales" class="page hidden">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h3>Vendas / Sales</h3>
+            <div>
+              <button class="btn" onclick="openNewSale()">Nova Venda</button>
+              <button class="btn secondary" onclick="exportCSV('sales')">Export CSV</button>
             </div>
-
-            <!-- New Investment Modal -->
-            <div id="new-investment-modal" class="modal hidden">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Novo Investimento</h3>
-                        <button class="modal-close" data-modal="new-investment-modal">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="new-investment-form">
-                            <div class="form-group">
-                                <label for="investment-capital">Capital a Investir (MZN) *</label>
-                                <input type="number" id="investment-capital" step="0.01" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="investment-days">Dias Úteis *</label>
-                                <input type="number" id="investment-days" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="investment-rate">Taxa Diária (%)</label>
-                                <input type="number" id="investment-rate" step="0.001" value="0.003" readonly>
-                                <small class="form-help">Taxa fixa de 0.3% ao dia</small>
-                            </div>
-                            <div class="investment-preview">
-                                <h4>Previsão de Retorno:</h4>
-                                <div class="preview-item">
-                                    <span>Retorno Bruto:</span>
-                                    <span id="preview-gross">0 MZN</span>
-                                </div>
-                                <div class="preview-item">
-                                    <span>Imposto (20%):</span>
-                                    <span id="preview-tax">0 MZN</span>
-                                </div>
-                                <div class="preview-item total">
-                                    <span>Retorno Líquido:</span>
-                                    <span id="preview-net">0 MZN</span>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-outline" data-modal="new-investment-modal">Cancelar</button>
-                        <button class="btn btn-primary" id="save-investment">Confirmar Investimento</button>
-                    </div>
-                </div>
-            </div>
+          </div>
+          <table id="sales-table" style="margin-top:12px">
+            <thead><tr><th>Data</th><th>Cliente</th><th>Valor</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>05/11/2025</td><td>Loja Beira</td><td>5.400 MZN</td><td style="color:var(--success)">Pago</td></tr>
+            </tbody>
+          </table>
         </div>
+      </section>
 
-        <!-- Notifications -->
-        <div id="notifications-container" class="notifications-container"></div>
-    </div>
+      <!-- INVENTORY PAGE -->
+      <section id="page-inventory" class="page hidden">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h3>Inventário / Inventory</h3>
+            <div>
+              <button class="btn" onclick="openNewProduct()">Novo Produto</button>
+              <button class="btn secondary" onclick="exportCSV('products')">Export CSV</button>
+            </div>
+          </div>
+          <table id="inventory-table" style="margin-top:12px">
+            <thead><tr><th>Código</th><th>Produto</th><th>Stock</th><th>Preço</th></tr></thead>
+            <tbody>
+              <tr><td>PRD001</td><td>Hambúrguer de Frango</td><td>150</td><td>120 MZN</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="src/js/app.js"></script>
-    <script src="src/js/auth.js"></script>
-    <script src="src/js/modules/dashboard.js"></script>
-    <script src="src/js/modules/products.js"></script>
-    <script src="src/js/modules/investments.js"></script>
-    <script src="src/js/api/client.js"></script>
+      <!-- MRP PAGE -->
+      <section id="page-mrp" class="page hidden">
+        <div class="card">
+          <h3>MRP / Production</h3>
+          <p>Ordens de produção e lista de materiais.</p>
+          <table>
+            <thead><tr><th>Ref</th><th>Produto</th><th>Qtd</th><th>Status</th></tr></thead>
+            <tbody><tr><td>OP-001</td><td>Carne Moída</td><td>50 kg</td><td>Em Produção</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- CRM PAGE -->
+      <section id="page-crm" class="page hidden">
+        <div class="card">
+          <h3>CRM</h3>
+          <p>Leads, pipeline e campanhas.</p>
+          <table>
+            <thead><tr><th>Nome</th><th>Contato</th><th>Stage</th></tr></thead>
+            <tbody><tr><td>Maria José</td><td>+258 84 123 4567</td><td>Lead</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- GREAT MOLA PAGE -->
+      <section id="page-greatmola" class="page hidden">
+        <div class="card">
+          <h3>Great Mola — Wallet & Investments</h3>
+          <div class="row">
+            <div class="col">
+              <p>Saldo: <strong id="mola-balance">125.200 MZN</strong></p>
+              <p>Investimentos ativos: <strong id="mola-count">3</strong></p>
+              <button class="btn" onclick="openInvest()">Investir</button>
+            </div>
+            <div class="col">
+              <h4>Simulação de Rendimento</h4>
+              <label>Capital (MZN)</label>
+              <input type="text" id="sim-capital" value="100000" />
+              <label>Dias úteis</label>
+              <input type="text" id="sim-days" value="22" />
+              <label>Taxa diária (%)</label>
+              <input type="text" id="sim-rate" value="0.3" />
+              <div style="margin-top:8px">
+                <button class="btn" onclick="simulateInvestment()">Calcular / Simulate</button>
+              </div>
+              <div id="sim-result" style="margin-top:10px"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- B2B PAGE -->
+      <section id="page-b2b" class="page hidden">
+        <div class="card">
+          <h3>B2B Marketplace</h3>
+          <p>Encontre fornecedores e publique seu catálogo.</p>
+          <button class="btn" onclick="openB2BRegister()">Cadastrar Empresa</button>
+          <div style="margin-top:12px" id="b2b-list">
+            <table>
+              <thead><tr><th>Empresa</th><th>Setor</th><th>Plano</th><th>Ações</th></tr></thead>
+              <tbody><tr><td>Fornecedor A</td><td>Alimentos</td><td>Premium</td><td><button class="btn secondary" onclick="contactSeller()">Contact</button></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- LOGISTICS -->
+      <section id="page-logistics" class="page hidden">
+        <div class="card">
+          <h3>Logística & Frete</h3>
+          <p>Gestão de frota, cotações e tracking.</p>
+          <table>
+            <thead><tr><th>Tracking</th><th>Origem</th><th>Destino</th><th>Status</th></tr></thead>
+            <tbody><tr><td>TCK-001</td><td>Beira</td><td>Maputo</td><td>Em Trânsito</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- INVESTMENTS -->
+      <section id="page-investments" class="page hidden">
+        <div class="card">
+          <h3>Investimentos — Great Mola</h3>
+          <p>Manage investments, returns and taxes (IRPS).</p>
+          <table>
+            <thead><tr><th>ID</th><th>Capital</th><th>Dias</th><th>Rendimento Líquido</th><th>Ações</th></tr></thead>
+            <tbody id="invest-table-body">
+              <tr><td>INV-001</td><td>100000</td><td>22</td><td>5.280 MZN</td><td><button class="btn secondary" onclick="withdrawInvestment('INV-001')">Resgatar</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- DOCUMENTS PAGE -->
+      <section id="page-documents" class="page hidden">
+        <div class="card">
+          <h3>Documentos</h3>
+          <form id="uploadForm">
+            <label>Tipo</label>
+            <select id="docType"><option value="invoice">Invoice</option><option value="contract">Contract</option></select>
+            <label>Entidade (ID)</label>
+            <input id="entityId" type="text" value="company-123" />
+            <label>Ficheiro (PNG, JPG, PDF)</label>
+            <input id="fileInput" type="file" accept=".png,.jpg,.jpeg,.pdf" />
+            <div style="margin-top:10px">
+              <button class="btn" type="button" onclick="uploadDocument()">Upload</button>
+            </div>
+          </form>
+          <h4 style="margin-top:12px">Ficheiros Recentes</h4>
+          <ul id="docsList" class="file-list"></ul>
+        </div>
+      </section>
+
+      <!-- SUPERADMIN PAGE -->
+      <section id="page-superadmin" class="page hidden">
+        <div class="card">
+          <h3>Super Admin</h3>
+          <p>Controle global — planos, preços, comissões.</p>
+          <div>
+            <label>Taxa de Comissão B2B (%)</label>
+            <input id="sys_commission" type="text" value="3" />
+            <label>Taxa IRPS (%)</label>
+            <input id="sys_irps" type="text" value="20" />
+            <div style="margin-top:8px"><button class="btn" onclick="saveSystemSettings()">Salvar Configurações</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS PAGE -->
+      <section id="page-settings" class="page hidden">
+        <div class="card">
+          <h3>Settings</h3>
+          <p>Configurações da conta e integrações (Payments, S3, Analytics).</p>
+          <div class="row">
+            <div class="col">
+              <label>API Base URL</label>
+              <input id="apiBaseInput" type="text" value="" placeholder="https://great-erp.onrender.com" />
+            </div>
+            <div class="col">
+              <label>Moeda padrão</label>
+              <select id="currencySelect"><option>MZN</option><option>USD</option></select>
+            </div>
+          </div>
+          <div style="margin-top:8px"><button class="btn" onclick="saveSettings()">Salvar</button></div>
+        </div>
+      </section>
+
+      <!-- LOGIN PAGE (hidden, shown on top when not authenticated) -->
+      <section id="page-login" class="page hidden" style="padding-top:40px">
+        <div class="card" style="max-width:420px;margin:0 auto">
+          <h3>Login / Sign in</h3>
+          <label>Email</label>
+          <input id="login-email" type="email" />
+          <label>Senha / Password</label>
+          <input id="login-password" type="password" />
+          <div style="margin-top:10px"><button class="btn" onclick="performLogin()">Entrar / Sign In</button></div>
+          <p id="login-msg" class="small" style="color:var(--danger)"></p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    /*****************************************************************
+     * Great Nexus — Static Frontend Prototype (single-file)
+     *
+     * How to use:
+     * 1) Save as index.html in your frontend repo.
+     * 2) Replace API_BASE with your backend URL (see settings).
+     * 3) This file is a fully client-side SPA demo; replace stubs with real API calls.
+     *
+     * Note: For production, implement proper auth (JWT), CSRF, input validation,
+     * and move code into modular React + build system.
+     *****************************************************************/
+
+    // ---------- CONFIG ----------
+    let API_BASE = ""; // set via Settings page or set here directly (e.g., https://great-erp.onrender.com)
+    const UI = { lang: 'pt' }; // 'pt' | 'en'
+
+    // localization / bilingual minimal
+    const T = {
+      pt: {
+        loginError: "Credenciais inválidas",
+        uploadSuccess: "Ficheiro enviado com sucesso",
+        uploadFail: "Falha no upload",
+      },
+      en: {
+        loginError: "Invalid credentials",
+        uploadSuccess: "File uploaded successfully",
+        uploadFail: "Upload failed",
+      }
+    };
+
+    // ---------- APP STATE ----------
+    const state = {
+      currentRoute: 'dashboard',
+      token: null,
+      user: {name: 'Admin'},
+      settings: { apiBase: '', currency: 'MZN', commission: 3, irps: 20 },
+      analytics: []
+    };
+
+    // ---------- ROUTING ----------
+    function showRoute(route){
+      state.currentRoute = route;
+      document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+      const el = document.getElementById('page-' + route);
+      if (el) el.classList.remove('hidden');
+      document.getElementById('page-title').innerText = (route === 'dashboard') ? 'Dashboard' : capitalize(route);
+      window.scrollTo(0,0);
+      trackEvent('navigate', { route });
+    }
+
+    // init menu
+    document.querySelectorAll('[data-route]').forEach(a=>{
+      a.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const r = a.getAttribute('data-route');
+        showRoute(r);
+      });
+    });
+    document.getElementById('logout').addEventListener('click', (e)=>{ e.preventDefault(); logout(); });
+
+    // mobile nav toggle (if you later show)
+    document.getElementById('navToggle').addEventListener('click', ()=> {
+      const sb = document.getElementById('sidebar');
+      sb.style.display = (sb.style.display === 'none') ? 'flex' : 'none';
+    });
+
+    // language
+    document.getElementById('langSelect').addEventListener('change', (e) => {
+      UI.lang = e.target.value;
+      // in this prototype we don't re-render UI text automatically; it's an example
+    });
+
+    // initial
+    showRoute(state.currentRoute);
+
+    // ---------- AUTH (stubs) ----------
+    async function performLogin(){
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      try {
+        // NOTE: Replace with real call to /api/v1/auth/login which should return accessToken
+        // Example:
+        // const res = await fetch(API_BASE + '/api/v1/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password})});
+        // const data = await res.json();
+        // state.token = data.accessToken; state.user.name = data.user.name;
+
+        // PROTOTYPE: fake success
+        state.token = 'demo-token';
+        state.user.name = email || 'Admin';
+        document.getElementById('userName').innerText = state.user.name;
+        document.getElementById('login-msg').innerText = '';
+        showRoute('dashboard');
+      } catch (err){
+        document.getElementById('login-msg').innerText = T[UI.lang].loginError;
+      }
+    }
+
+    function logout(){
+      state.token = null;
+      // in production clear storage & redirect to login
+      alert('Logged out (demo)');
+    }
+
+    // ---------- UPLOAD DOCUMENT ----------
+    async function uploadDocument(){
+      const fileInput = document.getElementById('fileInput');
+      const entityId = document.getElementById('entityId').value || 'unknown';
+      const docType = document.getElementById('docType').value;
+      if (!fileInput.files.length) { alert('Selecione um ficheiro'); return; }
+      const f = fileInput.files[0];
+      // build FormData
+      const fd = new FormData();
+      fd.append('file', f);
+      fd.append('entityId', entityId);
+      fd.append('type', docType);
+      try {
+        // Replace with real API call to upload (multipart/form-data)
+        // Example:
+        // const r = await fetch(API_BASE + '/api/v1/documents/upload', { method:'POST', headers: { Authorization: 'Bearer ' + state.token }, body: fd });
+        // const d = await r.json();
+        // For demo: simulate success
+        const li = document.createElement('li');
+        li.innerText = `${f.name} — ${docType} — uploaded (demo)`;
+        document.getElementById('docsList').prepend(li);
+        alert(T[UI.lang].uploadSuccess);
+        trackEvent('document_upload', { fileName: f.name, entityId, docType });
+      } catch (err){
+        alert(T[UI.lang].uploadFail);
+      }
+    }
+
+    // ---------- EXPORT CSV (simple) ----------
+    function exportCSV(type){
+      // In production call backend to export large datasets; here we build a small CSV demo
+      let csv = '';
+      if (type === 'sales'){
+        csv = 'date,client,amount,status\n2025-11-05,Loja Beira,5400,Paid\n';
+      } else if (type === 'products'){
+        csv = 'sku,name,stock,price\nPRD001,Hamburger,150,120\n';
+      }
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `${type}_${Date.now()}.csv`; a.click();
+      URL.revokeObjectURL(url);
+      trackEvent('export_csv', { type });
+    }
+
+    // ---------- INVESTMENT CALCULATION ----------
+    function simulateInvestment(){
+      const capital = parseFloat(document.getElementById('sim-capital').value || '0');
+      const days = parseInt(document.getElementById('sim-days').value || '0');
+      const dailyPercent = parseFloat(document.getElementById('sim-rate').value || '0') / 100.0;
+      const gross = capital * days * dailyPercent;
+      const irps = (state.settings.irps || 20) / 100.0;
+      const tax = gross * irps;
+      const net = gross - tax;
+      const finalBalance = capital + net;
+      const html = `
+        <p>Rendimento bruto: ${formatMoney(gross)}</p>
+        <p>IRPS (${(irps*100).toFixed(1)}%): ${formatMoney(tax)}</p>
+        <p><strong>Rendimento líquido: ${formatMoney(net)}</strong></p>
+        <p>Saldo final: ${formatMoney(finalBalance)}</p>
+      `;
+      document.getElementById('sim-result').innerHTML = html;
+      trackEvent('investment_simulate', { capital, days, dailyPercent });
+    }
+
+    function formatMoney(v){ return (Math.round(v*100)/100).toLocaleString() + ' MZN'; }
+
+    // ---------- INVESTMENT WITHDRAW (stub) ----------
+    function withdrawInvestment(id){
+      if (!confirm('Confirm withdraw for ' + id + ' ?')) return;
+      // call /api/v1/mola/investments/withdraw
+      alert('Withdraw request created (demo).');
+      trackEvent('investment_withdraw', { id });
+    }
+
+    // ---------- PAYMENT INITIATION (stub) ----------
+    async function initiatePayment(method, amount, reference){
+      // Example method: 'mpesa' | 'stripe' | 'paypal' | 'mola'
+      // Call backend to initiate and receive payment token or redirect URL
+      console.log('Initiate payment', method, amount, reference);
+      trackEvent('payment_initiate', { method, amount, reference });
+      // In real flow: open checkout or show QR
+      alert('Pagamento iniciado (demo). Method: ' + method);
+    }
+
+    // ---------- B2B actions ----------
+    function openB2BRegister(){
+      alert('Open B2B registration form (demo).');
+    }
+    function contactSeller(){
+      alert('Open contact modal to seller (demo).');
+    }
+
+    // ---------- Admin settings ----------
+    function saveSystemSettings(){
+      const comm = parseFloat(document.getElementById('sys_commission').value || '0');
+      const irps = parseFloat(document.getElementById('sys_irps').value || '20');
+      state.settings.commission = comm; state.settings.irps = irps;
+      alert('Settings saved (demo)');
+      trackEvent('settings_update', { commission:comm, irps });
+    }
+    function saveSettings(){
+      const base = document.getElementById('apiBaseInput').value;
+      const cur = document.getElementById('currencySelect').value;
+      state.settings.apiBase = base; state.settings.currency = cur; API_BASE = base;
+      alert('Settings saved. API_BASE = ' + API_BASE);
+    }
+
+    // ---------- small helpers ----------
+    function capitalize(s){ return s.charAt(0).toUpperCase() + s.slice(1) }
+
+    // ---------- Analytics (tracking stub) ----------
+    function trackEvent(type, payload){
+      const ev = { ts: new Date().toISOString(), type, payload, user: state.user.name };
+      state.analytics.push(ev);
+      // In prod: send to /api/v1/analytics/events
+      console.log('TRACK', ev);
+    }
+
+    // ---------- DOCUMENTS / FILES demo list ----------
+    (function seedDocs(){
+      const docs = ['inv-1001.pdf','contract-empresaA.pdf'];
+      const list = document.getElementById('docsList');
+      docs.forEach(d => { const li = document.createElement('li'); li.innerText = d; list.appendChild(li); });
+    })();
+
+    // ---------- simple UI actions for create entities (stubs) ----------
+    function openNewSale(){ alert('Open new sale modal (demo)'); trackEvent('open_new_sale'); }
+    function openNewProduct(){ alert('Open new product modal (demo)'); trackEvent('open_new_product'); }
+    function openInvest(){ alert('Open invest modal (demo)'); trackEvent('open_invest'); }
+
+    // ---------- EXPORT: PDF (quick print) ----------
+    function exportToPDF(title){
+      // This is a simple method: print the page or a selection. In prod generate server-side PDF.
+      document.title = title || 'Great Nexus Report';
+      window.print();
+      trackEvent('export_pdf', { title });
+    }
+
+    // ---------- GA / external analytics explicit consent (demo) ----------
+    function consentAnalytics(on){
+      if(on) alert('Analytics enabled (demo)');
+      else alert('Analytics disabled (demo)');
+    }
+
+    // ---------- ONLOAD (simulate user logged) ----------
+    document.addEventListener('DOMContentLoaded', () => {
+      // initialize settings
+      API_BASE = '';
+      state.settings.apiBase = API_BASE;
+      document.getElementById('apiBaseInput').value = API_BASE;
+      document.getElementById('currencySelect').value = state.settings.currency;
+      // set initial user
+      document.getElementById('userName').innerText = state.user.name;
+      // show login if not token (for demo we leave token set)
+      if (!state.token){ showRoute('page-login'); /* but here default shows dashboard */ }
+      // attach analytics basic events
+      document.getElementById('global-search').addEventListener('input', e=>{ trackEvent('search', { q: e.target.value }); });
+    });
+
+    // Expose API for debugging in console
+    window.GNX = { state, showRoute, exportCSV, simulateInvestment, initiatePayment, uploadDocument };
+  </script>
 </body>
 </html>
