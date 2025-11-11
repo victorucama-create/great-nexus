@@ -296,9 +296,10 @@ app.get("/login", (req, res) => {
                         localStorage.setItem('token', data.data.accessToken);
                         localStorage.setItem('user', JSON.stringify(data.data.user));
                         
+                        // Redirecionar para o dashboard após 2 segundos
                         setTimeout(() => {
-                            alert('Login realizado com sucesso!\\\\n\\\\nToken: ' + data.data.accessToken + '\\\\nUsuário: ' + data.data.user.name + '\\\\n\\\\nAgora você pode usar as APIs protegidas.');
-                        }, 1000);
+                            window.location.href = '/dashboard';
+                        }, 2000);
                     } else {
                         messageDiv.className = 'message error';
                         messageDiv.textContent = '❌ ' + data.error;
@@ -320,6 +321,179 @@ app.get("/login", (req, res) => {
   `);
 });
 
+// Dashboard (após login)
+app.get("/dashboard", (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Great Nexus - Dashboard</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                margin: 0; 
+                background: #f5f5f5;
+            }
+            .header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .header h1 {
+                margin: 0;
+            }
+            .user-info {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }
+            .logout-btn {
+                background: rgba(255,255,255,0.2);
+                color: white;
+                border: 1px solid white;
+                padding: 8px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+            .logout-btn:hover {
+                background: rgba(255,255,255,0.3);
+            }
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            .modules {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 20px;
+                margin-top: 20px;
+            }
+            .module-card {
+                background: white;
+                padding: 25px;
+                border-radius: 10px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                border-left: 4px solid #667eea;
+            }
+            .module-card h3 {
+                margin-top: 0;
+                color: #333;
+            }
+            .module-card p {
+                color: #666;
+                margin-bottom: 15px;
+            }
+            .btn {
+                background: #667eea;
+                color: white;
+                padding: 10px 15px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                text-decoration: none;
+                display: inline-block;
+            }
+            .btn:hover {
+                background: #5a6fd8;
+            }
+            .token-info {
+                background: #e8f4fd;
+                padding: 15px;
+                border-radius: 5px;
+                margin: 20px 0;
+                font-family: monospace;
+                word-break: break-all;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>🌐 Great Nexus - Dashboard</h1>
+            <div class="user-info">
+                <span id="userName">Carregando...</span>
+                <button class="logout-btn" onclick="logout()">Sair</button>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="token-info">
+                <strong>Token de Acesso:</strong><br>
+                <span id="accessToken">Carregando...</span>
+            </div>
+
+            <div class="modules">
+                <div class="module-card">
+                    <h3>📦 Gestão de Produtos</h3>
+                    <p>Gerencie seu inventário, preços e categorias de produtos</p>
+                    <button class="btn" onclick="manageProducts()">Gerenciar Produtos</button>
+                </div>
+
+                <div class="module-card">
+                    <h3>💰 Gestão de Vendas</h3>
+                    <p>Registre e acompanhe vendas, faturas e receitas</p>
+                    <button class="btn" onclick="manageSales()">Gerenciar Vendas</button>
+                </div>
+
+                <div class="module-card">
+                    <h3>🏦 Mola Investimentos</h3>
+                    <p>Simule e acompanhe seus investimentos</p>
+                    <button class="btn" onclick="manageInvestments()">Simular Investimento</button>
+                </div>
+
+                <div class="module-card">
+                    <h3>📎 Gestão de Documentos</h3>
+                    <p>Faça upload e gerencie seus documentos</p>
+                    <button class="btn" onclick="manageDocuments()">Gerenciar Documentos</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Carregar informações do usuário
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                alert('Sessão expirada. Faça login novamente.');
+                window.location.href = '/login';
+            }
+
+            document.getElementById('userName').textContent = user.name || 'Usuário';
+            document.getElementById('accessToken').textContent = token || 'Não encontrado';
+
+            function logout() {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+            }
+
+            function manageProducts() {
+                alert('Em desenvolvimento: Gestão de Produtos');
+            }
+
+            function manageSales() {
+                alert('Em desenvolvimento: Gestão de Vendas');
+            }
+
+            function manageInvestments() {
+                alert('Em desenvolvimento: Mola Investimentos');
+            }
+
+            function manageDocuments() {
+                alert('Em desenvolvimento: Gestão de Documentos');
+            }
+        </script>
+    </body>
+    </html>
+  `);
+});
+
 // Página Inicial
 app.get("/", (req, res) => {
   res.json({
@@ -331,7 +505,8 @@ app.get("/", (req, res) => {
       sales: "GET/POST /api/v1/erp/sales",
       investments: "POST /api/v1/mola/invest",
       health: "GET /health",
-      login_page: "GET /login"
+      login_page: "GET /login",
+      dashboard: "GET /dashboard"
     }
   });
 });
@@ -461,6 +636,7 @@ app.use((req, res) => {
       "GET /",
       "GET /health", 
       "GET /login",
+      "GET /dashboard",
       "POST /api/v1/auth/login",
       "GET /api/v1/erp/products",
       "POST /api/v1/erp/products",
@@ -480,6 +656,7 @@ app.listen(PORT, "0.0.0.0", () => {
 🚀 Great Nexus iniciado na porta ${PORT}
 📍 Health: http://localhost:${PORT}/health
 🔐 Login Page: http://localhost:${PORT}/login
+📊 Dashboard: http://localhost:${PORT}/dashboard
 🔐 API Login: POST http://localhost:${PORT}/api/v1/auth/login
   `);
 });
