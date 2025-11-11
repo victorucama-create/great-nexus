@@ -22,7 +22,17 @@ const JWT_SECRET = process.env.JWT_SECRET || "greatnexus-secret-key";
 // MIDDLEWARE
 // =============================================
 app.use(cors());
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+  crossOriginEmbedderPolicy: false
+}));
 app.use(morgan("tiny"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -119,6 +129,8 @@ app.get("/login", (req, res) => {
     <html>
     <head>
         <title>Great Nexus - Login</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
             body { 
                 font-family: Arial, sans-serif; 
@@ -285,7 +297,7 @@ app.get("/login", (req, res) => {
                         localStorage.setItem('user', JSON.stringify(data.data.user));
                         
                         setTimeout(() => {
-                            alert('Login realizado com sucesso!\\n\\nToken: ' + data.data.accessToken + '\\nUsuário: ' + data.data.user.name + '\\n\\nAgora você pode usar as APIs protegidas.');
+                            alert('Login realizado com sucesso!\\\\n\\\\nToken: ' + data.data.accessToken + '\\\\nUsuário: ' + data.data.user.name + '\\\\n\\\\nAgora você pode usar as APIs protegidas.');
                         }, 1000);
                     } else {
                         messageDiv.className = 'message error';
@@ -324,7 +336,7 @@ app.get("/", (req, res) => {
   });
 });
 
-// Login
+// Login API
 app.post("/api/v1/auth/login", (req, res) => {
   console.log("📨 Login attempt:", req.body);
   
@@ -342,10 +354,17 @@ app.post("/api/v1/auth/login", (req, res) => {
   const token = generateToken(user);
   const tenant = db.tenants.find(t => t.id === user.tenant_id);
 
+  // Remover password da resposta
+  const { password: _, ...userWithoutPassword } = user;
+
   res.json({
     success: true,
     message: "Login bem-sucedido!",
-    data: { user, tenant, accessToken: token },
+    data: { 
+      user: userWithoutPassword, 
+      tenant, 
+      accessToken: token 
+    },
   });
 });
 
