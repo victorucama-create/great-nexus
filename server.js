@@ -1,7 +1,6 @@
 /**
  * GREAT NEXUS – Ecossistema Empresarial Inteligente
  * Versão Híbrida SaaS / Node.js Backend
- * Atualizado: Novembro/2025
  */
 
 require("dotenv").config();
@@ -17,72 +16,38 @@ const fs = require("fs");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || "greatnexus-secret-key-change-in-production";
+const JWT_SECRET = process.env.JWT_SECRET || "greatnexus-secret-key";
 
 // =============================================
-// MIDDLEWARE DE SEGURANÇA E PERFORMANCE
+// MIDDLEWARE
 // =============================================
-app.use(cors({
-  origin: process.env.FRONTEND_URL || "*",
-  credentials: true
-}));
+app.use(cors());
+app.use(helmet());
+app.use(morgan("tiny"));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false
-}));
-
-app.use(morgan("combined"));
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
-// Criar diretório de uploads se não existir
-const uploadsDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-app.use("/uploads", express.static(uploadsDir));
+// Servir arquivos estáticos
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // =============================================
-// UPLOAD DE DOCUMENTOS / COMPROVATIVOS
+// CONFIGURAÇÃO DO MULTER
 // =============================================
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadsDir);
+    const uploadDir = path.join(__dirname, "uploads");
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
-    const safeFilename = file.originalname.replace(/[^a-zA-Z0-9.\-]/g, "_");
-    cb(null, uniqueSuffix + "-" + safeFilename);
+    cb(null, uniqueSuffix + "-" + file.originalname);
   },
 });
-
-const upload = multer({ 
-  storage,
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    // Permitir apenas certos tipos de arquivo
-    const allowedMimes = [
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    ];
-    
-    if (allowedMimes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Tipo de arquivo não permitido'), false);
-    }
-  }
-});
+const upload = multer({ storage });
 
 // =============================================
-// BANCO DE DADOS SIMPLIFICADO (mock temporário)
+// BANCO DE DADOS TEMPORÁRIO
 // =============================================
 const db = {
   users: [
@@ -93,7 +58,6 @@ const db = {
       password: bcrypt.hashSync("admin123", 8),
       role: "super_admin",
       tenant_id: null,
-      created_at: new Date().toISOString()
     },
     {
       id: "tenant-admin-1",
@@ -102,17 +66,10 @@ const db = {
       password: bcrypt.hashSync("demo123", 8),
       role: "tenant_admin",
       tenant_id: "tenant-1",
-      created_at: new Date().toISOString()
     },
   ],
   tenants: [
-    { 
-      id: "tenant-1", 
-      name: "Great Nexus Demo Company", 
-      country: "MZ", 
-      currency: "MZN",
-      created_at: new Date().toISOString()
-    },
+    { id: "tenant-1", name: "Great Nexus Demo Company", country: "MZ", currency: "MZN" },
   ],
   products: [],
   sales: [],
@@ -121,31 +78,19 @@ const db = {
 };
 
 // =============================================
-// FUNÇÕES DE AUTENTICAÇÃO
+// AUTENTICAÇÃO
 // =============================================
-
 function generateToken(user) {
-  return jwt.sign({ 
-    id: user.id, 
-    role: user.role,
-    tenant_id: user.tenant_id 
-  }, JWT_SECRET, { expiresIn: "8h" });
+  return jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: "8h" });
 }
 
 function verifyToken(req, res, next) {
-  const authHeader = req.headers["authorization"];
-  if (!authHeader) {
-    return res.status(403).json({ success: false, error: "Token de autorização não fornecido" });
-  }
+  const token = req.headers["authorization"];
+  if (!token) return res.status(403).json({ success: false, error: "Token não fornecido" });
   
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
-  
-  if (!token) {
-    return res.status(403).json({ success: false, error: "Token não fornecido" });
-  }
-
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const tokenValue = token.startsWith("Bearer ") ? token.slice(7) : token;
+    const decoded = jwt.verify(tokenValue, JWT_SECRET);
     req.user = decoded;
     next();
   } catch (err) {
@@ -154,424 +99,171 @@ function verifyToken(req, res, next) {
 }
 
 // =============================================
-// ROTA DE AUTENTICAÇÃO
+// ROTAS PÚBLICAS
 // =============================================
+
+// Health Check
+app.get("/health", (req, res) => {
+  res.json({
+    status: "OK",
+    service: "Great Nexus Backend",
+    time: new Date().toISOString(),
+    environment: process.env.NODE_ENV || "development"
+  });
+});
+
+// Página Inicial
+app.get("/", (req, res) => {
+  res.json({
+    message: "🌐 Great Nexus API Online",
+    version: "1.0.0",
+    endpoints: {
+      auth: "POST /api/v1/auth/login",
+      products: "GET/POST /api/v1/erp/products",
+      sales: "GET/POST /api/v1/erp/sales",
+      investments: "POST /api/v1/mola/invest",
+      health: "GET /health"
+    }
+  });
+});
+
+// Login
 app.post("/api/v1/auth/login", (req, res) => {
-  try {
-    const { email, password } = req.body;
-    
-    if (!email || !password) {
-      return res.status(400).json({ 
-        success: false, 
-        error: "Email e senha são obrigatórios" 
-      });
-    }
-
-    const user = db.users.find(u => u.email === email);
-    if (!user) {
-      return res.status(404).json({ 
-        success: false, 
-        error: "Utilizador não encontrado" 
-      });
-    }
-
-    const passwordIsValid = bcrypt.compareSync(password, user.password);
-    if (!passwordIsValid) {
-      return res.status(401).json({ 
-        success: false, 
-        error: "Senha incorreta" 
-      });
-    }
-
-    const token = generateToken(user);
-    const tenant = db.tenants.find(t => t.id === user.tenant_id);
-
-    // Remover password do objeto user antes de enviar
-    const { password: _, ...userWithoutPassword } = user;
-
-    res.json({
-      success: true,
-      message: "Login bem-sucedido!",
-      data: { 
-        user: userWithoutPassword, 
-        tenant, 
-        accessToken: token 
-      },
-    });
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Erro interno do servidor" 
-    });
+  console.log("📨 Login attempt:", req.body);
+  
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ success: false, error: "Email e senha são obrigatórios" });
   }
+
+  const user = db.users.find(u => u.email === email);
+  if (!user) return res.status(404).json({ success: false, error: "Utilizador não encontrado" });
+
+  const passwordIsValid = bcrypt.compareSync(password, user.password);
+  if (!passwordIsValid) return res.status(401).json({ success: false, error: "Senha incorreta" });
+
+  const token = generateToken(user);
+  const tenant = db.tenants.find(t => t.id === user.tenant_id);
+
+  res.json({
+    success: true,
+    message: "Login bem-sucedido!",
+    data: { user, tenant, accessToken: token },
+  });
 });
 
 // =============================================
 // ROTAS PROTEGIDAS
 // =============================================
 
-// ---- Middleware para verificar roles de admin
-function requireAdmin(req, res, next) {
-  if (req.user.role !== "super_admin" && req.user.role !== "tenant_admin") {
-    return res.status(403).json({ 
-      success: false, 
-      error: "Acesso negado. Permissões de administrador necessárias." 
-    });
-  }
-  next();
-}
-
-// ---- Produtos (ERP)
+// Produtos
 app.get("/api/v1/erp/products", verifyToken, (req, res) => {
-  try {
-    res.json({ 
-      success: true, 
-      data: db.products,
-      count: db.products.length
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      error: "Erro ao buscar produtos" 
-    });
-  }
+  res.json({ success: true, data: db.products });
 });
 
-app.post("/api/v1/erp/products", verifyToken, requireAdmin, (req, res) => {
-  try {
-    const { sku, name, price, stock, category, description } = req.body;
-    
-    if (!name || !price) {
-      return res.status(400).json({ 
-        success: false, 
-        error: "Nome e preço são obrigatórios" 
-      });
-    }
-
-    const newProduct = { 
-      id: Date.now().toString(), 
-      sku: sku || `SKU-${Date.now()}`,
-      name, 
-      price: parseFloat(price),
-      stock: parseInt(stock) || 0, 
-      category: category || "Geral",
-      description: description || "",
-      created_by: req.user.id,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    
-    db.products.push(newProduct);
-    
-    res.status(201).json({ 
-      success: true, 
-      message: "Produto adicionado com sucesso!", 
-      data: newProduct 
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      error: "Erro ao criar produto" 
-    });
-  }
+app.post("/api/v1/erp/products", verifyToken, (req, res) => {
+  const { sku, name, price, stock, category } = req.body;
+  const newProduct = { 
+    id: Date.now().toString(), 
+    sku, 
+    name, 
+    price, 
+    stock, 
+    category,
+    created_at: new Date().toISOString()
+  };
+  db.products.push(newProduct);
+  res.json({ success: true, message: "Produto adicionado com sucesso!", data: newProduct });
 });
 
-// ---- Vendas (ERP)
+// Vendas
 app.get("/api/v1/erp/sales", verifyToken, (req, res) => {
-  try {
-    res.json({ 
-      success: true, 
-      data: db.sales,
-      count: db.sales.length
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      error: "Erro ao buscar vendas" 
-    });
-  }
+  res.json({ success: true, data: db.sales });
 });
 
 app.post("/api/v1/erp/sales", verifyToken, (req, res) => {
-  try {
-    const { invoice_number, total, status, customer_name, items } = req.body;
-    
-    if (!invoice_number || !total) {
-      return res.status(400).json({ 
-        success: false, 
-        error: "Número da fatura e total são obrigatórios" 
-      });
-    }
-
-    const newSale = { 
-      id: Date.now().toString(), 
-      invoice_number, 
-      total: parseFloat(total),
-      status: status || "pending",
-      customer_name: customer_name || "Cliente Anônimo",
-      items: items || [],
-      created_by: req.user.id,
-      created_at: new Date().toISOString()
-    };
-    
-    db.sales.push(newSale);
-    
-    res.status(201).json({ 
-      success: true, 
-      message: "Venda registrada com sucesso!", 
-      data: newSale 
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      error: "Erro ao registrar venda" 
-    });
-  }
+  const { invoice_number, total, status } = req.body;
+  const newSale = { 
+    id: Date.now().toString(), 
+    invoice_number, 
+    total, 
+    status, 
+    created_at: new Date().toISOString() 
+  };
+  db.sales.push(newSale);
+  res.json({ success: true, message: "Venda registrada!", data: newSale });
 });
 
-// ---- Mola Investimentos
+// Investimentos Mola
 app.post("/api/v1/mola/invest", verifyToken, (req, res) => {
-  try {
-    const { capital, diasUteis } = req.body;
-    
-    if (!capital || !diasUteis) {
-      return res.status(400).json({ 
-        success: false, 
-        error: "Capital e dias úteis são obrigatórios" 
-      });
-    }
+  const { capital, diasUteis } = req.body;
+  const taxa = 0.003;
+  const rendimento = capital * diasUteis * taxa;
+  const irps = rendimento * 0.2;
+  const liquido = rendimento - irps;
 
-    const capitalNum = parseFloat(capital);
-    const diasUteisNum = parseInt(diasUteis);
-    
-    if (capitalNum <= 0 || diasUteisNum <= 0) {
-      return res.status(400).json({ 
-        success: false, 
-        error: "Capital e dias úteis devem ser maiores que zero" 
-      });
-    }
-
-    const taxa = 0.003;
-    const rendimento = capitalNum * diasUteisNum * taxa;
-    const irps = rendimento * 0.2;
-    const liquido = rendimento - irps;
-
-    const newInv = {
-      id: "inv-" + Date.now(),
-      user_id: req.user.id,
-      capital: capitalNum,
-      dias_uteis: diasUteisNum,
-      rendimento_bruto: rendimento,
-      irps: irps,
-      rendimento_liquido: liquido,
-      status: "active",
-      created_at: new Date().toISOString()
-    };
-    
-    db.investments.push(newInv);
-    
-    res.status(201).json({ 
-      success: true, 
-      message: "Investimento simulado com sucesso!",
-      data: newInv 
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      error: "Erro ao simular investimento" 
-    });
-  }
+  const newInv = {
+    id: "inv-" + Date.now(),
+    user_id: req.user.id,
+    capital,
+    rendimento_liquido: liquido,
+    status: "active",
+    created_at: new Date().toISOString()
+  };
+  db.investments.push(newInv);
+  res.json({ success: true, data: newInv });
 });
 
-// ---- Upload de Documentos
+// Upload de Documentos
 app.post("/api/v1/documents/upload", verifyToken, upload.single("file"), (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ 
-        success: false, 
-        error: "Nenhum arquivo enviado" 
-      });
-    }
-
-    const newDoc = {
-      id: Date.now().toString(),
-      user_id: req.user.id,
-      path: "/uploads/" + req.file.filename,
-      name: req.file.originalname,
-      type: req.file.mimetype,
-      size: req.file.size,
-      created_at: new Date().toISOString()
-    };
-    
-    db.documents.push(newDoc);
-    
-    res.status(201).json({ 
-      success: true, 
-      message: "Documento carregado com sucesso!", 
-      data: newDoc 
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      error: "Erro ao fazer upload do documento" 
-    });
+  if (!req.file) {
+    return res.status(400).json({ success: false, error: "Nenhum arquivo enviado" });
   }
+
+  const newDoc = {
+    id: Date.now().toString(),
+    user_id: req.user.id,
+    path: "/uploads/" + req.file.filename,
+    name: req.file.originalname,
+    type: req.file.mimetype,
+    created_at: new Date().toISOString()
+  };
+  db.documents.push(newDoc);
+  res.json({ success: true, message: "Documento carregado!", data: newDoc });
 });
 
 // =============================================
-// MIDDLEWARE DE TRATAMENTO DE ERROS
+// ROTA DE FALLBACK
 // =============================================
-
-// Middleware para errors do Multer
-app.use((error, req, res, next) => {
-  if (error instanceof multer.MulterError) {
-    if (error.code === "LIMIT_FILE_SIZE") {
-      return res.status(400).json({
-        success: false,
-        error: "Arquivo muito grande. Tamanho máximo permitido: 10MB"
-      });
-    }
-  }
-  
-  if (error) {
-    return res.status(400).json({
-      success: false,
-      error: error.message
-    });
-  }
-  
-  next();
-});
-
-// Middleware para rotas não encontradas
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    error: "Rota não encontrada"
+    error: "Rota não encontrada",
+    path: req.url,
+    method: req.method,
+    available_routes: [
+      "GET /",
+      "GET /health", 
+      "POST /api/v1/auth/login",
+      "GET /api/v1/erp/products",
+      "POST /api/v1/erp/products",
+      "GET /api/v1/erp/sales",
+      "POST /api/v1/erp/sales",
+      "POST /api/v1/mola/invest",
+      "POST /api/v1/documents/upload"
+    ]
   });
 });
 
 // =============================================
-// HEALTH CHECK
-// =============================================
-app.get("/health", (req, res) => {
-  res.json({
-    status: "OK",
-    service: "Great Nexus Backend",
-    version: "1.0.0",
-    environment: process.env.NODE_ENV || "development",
-    time: new Date().toISOString(),
-    uptime: process.uptime()
-  });
-});
-
-// =============================================
-// FRONTEND (HTML SIMPLIFICADO TEMPORÁRIO)
-// =============================================
-app.get("/", (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="pt">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Great Nexus - Ecossistema Empresarial Inteligente</title>
-      <style>
-        body { 
-          font-family: Arial, sans-serif; 
-          margin: 0; 
-          padding: 40px; 
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          text-align: center;
-        }
-        .container { 
-          max-width: 800px; 
-          margin: 0 auto; 
-          background: rgba(255,255,255,0.1);
-          padding: 40px;
-          border-radius: 15px;
-          backdrop-filter: blur(10px);
-        }
-        h1 { 
-          font-size: 2.5em; 
-          margin-bottom: 20px; 
-        }
-        .status { 
-          background: rgba(255,255,255,0.2); 
-          padding: 20px; 
-          border-radius: 10px; 
-          margin: 20px 0; 
-        }
-        .endpoints { 
-          text-align: left; 
-          background: rgba(255,255,255,0.1); 
-          padding: 20px; 
-          border-radius: 10px; 
-          margin-top: 30px;
-        }
-        code { 
-          background: rgba(0,0,0,0.3); 
-          padding: 2px 6px; 
-          border-radius: 4px; 
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h1>🌐 Great Nexus API</h1>
-        <p>Backend ativo e seguro</p>
-        
-        <div class="status">
-          <h3>🚀 Status: Online</h3>
-          <p>Sistema operacional e pronto para receber requisições</p>
-        </div>
-        
-        <div class="endpoints">
-          <h3>📚 Endpoints Disponíveis:</h3>
-          <ul>
-            <li><code>POST /api/v1/auth/login</code> - Autenticação</li>
-            <li><code>GET /api/v1/erp/products</code> - Listar produtos</li>
-            <li><code>POST /api/v1/erp/products</code> - Criar produto</li>
-            <li><code>GET /api/v1/erp/sales</code> - Listar vendas</li>
-            <li><code>POST /api/v1/erp/sales</code> - Registrar venda</li>
-            <li><code>POST /api/v1/mola/invest</code> - Simular investimento</li>
-            <li><code>POST /api/v1/documents/upload</code> - Upload de documentos</li>
-            <li><code>GET /health</code> - Health check</li>
-          </ul>
-        </div>
-        
-        <p><strong>👤 Credenciais de teste:</strong><br>
-        Admin: admin@greatnexus.com / admin123<br>
-        Demo: demo@greatnexus.com / demo123</p>
-      </div>
-    </body>
-    </html>
-  `);
-});
-
-// =============================================
-// START SERVER
+// INICIAR SERVIDOR
 // =============================================
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`
 🚀 Great Nexus iniciado na porta ${PORT}
-📍 Ambiente: ${process.env.NODE_ENV || 'development'}
-📊 Health check: http://localhost:${PORT}/health
-🔐 API Base: http://localhost:${PORT}/api/v1
+📍 Health: http://localhost:${PORT}/health
+🔐 Login: POST http://localhost:${PORT}/api/v1/auth/login
   `);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received. Shutting down gracefully...');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received. Shutting down gracefully...');
-  process.exit(0);
 });
 
 module.exports = app;
